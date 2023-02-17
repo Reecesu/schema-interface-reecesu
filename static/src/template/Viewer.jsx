@@ -7,6 +7,7 @@ import DownloadIcon from '@mui/icons-material/CloudDownload';
 
 import axios from 'axios';
 import UploadModal from './UploadModal';
+import MuiDrawer from './MuiDrawer';
 import Canvas from './Canvas';
 import SideEditor from './SideEditor';
 import JsonEdit from './JsonEdit';
@@ -44,6 +45,10 @@ class Viewer extends Component {
             schemaJson: response.schemaJson,
             isUpload: true
         });
+    }
+
+    callbackFromDrawer = (showJsonEdit) => {
+        this.setState({ showJsonEdit });
     }
 
     download(event) {
@@ -120,29 +125,29 @@ class Viewer extends Component {
         let jsonEdit = "";
         let sidebarClassName = this.state.isOpen ? "sidebar-open" : "sidebar-closed";
         let canvasClassName = this.state.isOpen ? "canvas-shrunk" : "canvas-wide";
-
+    
         // a schema exists
         if (this.state.schemaResponse !== '') {
             // title of schema
             schemaHeading = <h3 className="schema-name col-md-8" style={{ textAlign: 'center' }}>
                 {this.state.schemaName}
             </h3>;
-
+    
             // graph (cytoscape)
             canvas = <Canvas id="canvas"
                 elements={this.state.schemaResponse}
                 sidebarCallback={this.sidebarCallback}
                 className={canvasClassName}
             />;
-
-            jsonEdit = <JsonEdit
-                style={{ width: 'inherit', height: '75vh' }}
-                schemaJson={this.state.schemaJson}
-                parentCallback={this.jsonEditorCallback}
-            />
-
+    
+            jsonEdit = this.state.showJsonEdit ?
+                <JsonEdit
+                    style={{ width: 'inherit', height: '75vh' }}
+                    schemaJson={this.state.schemaJson}
+                    parentCallback={this.jsonEditorCallback}
+                /> : null;
         }
-
+    
         return (
             <div id="viewer">
                 <div className='container'>
@@ -159,6 +164,7 @@ class Viewer extends Component {
                 </div>
                 <div className="row">{schemaHeading}</div>
                 <div style={{ display: 'inline-flex' }}>
+                <MuiDrawer open={this.state.isOpen} handleToggle={this.handleDrawerToggle} setShowJsonEdit={this.setShowJsonEdit} />
                     <SideEditor
                         data={this.state.nodeData}
                         isOpen={this.state.isOpen}

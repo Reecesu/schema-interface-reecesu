@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, jsonify, request
 import json
 
 # ===============================================
@@ -18,7 +18,8 @@ schema_key_dict = {
     'event': ['@id', 'name', 'comment', 'description', 'aka', 'qnode', 'qlabel', 'isSchema', 'goal', 'ta1explanation', 'importance', 'children_gate', 'instanceOf', 'probParent', 'probChild', 'probability', 'liklihood', 'wd_node', 'wd_label', 'wd_description', 'modality', 'participants', 'privateData', 'outlinks', 'entities', 'relations', 'children', 'optional', 'repeatable'],
     'child': ['child', 'comment', 'optional', 'importance', 'outlinks'],
     'privateData': ['@type', 'template', 'repeatable', 'importance'],
-    'entity': ['name', '@id', 'qnode', 'qlabel', 'centrality', 'wd_node', 'wd_label', 'wd_description', 'modality', 'aka'],
+    'entity': ['name', '@id', 'qnode', 'qlabel', 'centrality', 'wd_node', 'wd_label', 'wd_description', 'modality', 'aka','properties'],
+    'properties': ['property values']
     # 'relation': ['name', 'wd_node', 'wd_label', 'modality', 'wd_description', 'ta1ref', 'relationSubject', 'relationObject', 'relationPredicate']
 }
 
@@ -338,7 +339,8 @@ def update_json(values):
     new_json = schema_json
     node_id = values['id']
     node_type = False
-    key = values['key']
+    print('values:', values['key'])
+    key = node_id
     new_value = values['value']
     if key in ['source', 'target']:
         node_type = 'edge'
@@ -470,6 +472,32 @@ def get_connected_nodes(selected_node):
 @app.route('/')
 def homepage():
     return render_template('index.html')
+
+@app.route('/update-node-data', methods=['POST'])
+def update_node_data():
+    """Updates JSON with values.
+
+    Parameters:
+    values (dict): contains node id, key, and value to change key to.
+    e.g. {id: node_id, key: name, value: Test}
+
+    Returns:
+    schemaJson (dict): new JSON 
+
+    Error code:
+    405: Method Not Allowed
+    Method is not allowed for the requested URL.
+    """
+    if request.method == 'POST':
+        values = request.get_json()
+        print(f'values: {values}')
+        new_json = update_json(values)
+        return json.dumps({
+            'schemaJson': new_json
+        })
+    else:
+        return 'Method not allowed', 405
+
 
 @app.route('/upload', methods=['POST'])
 def upload():

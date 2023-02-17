@@ -84,7 +84,7 @@ class UploadModal extends Component {
     Checks whether file size is too large.
     If so, throws an error and discards the file.
     */
-
+  
     let files = event.target.files;
     let size = 2000000;
     let err = [];
@@ -97,6 +97,9 @@ class UploadModal extends Component {
       // discard selected file
       toast.error(err[z]);
       event.target.value = null;
+    }
+    if (err.length > 0) {
+      this.setState({ valid: false });
     }
     return err.length === 0;
   }

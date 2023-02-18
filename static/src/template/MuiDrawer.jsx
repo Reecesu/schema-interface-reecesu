@@ -21,6 +21,10 @@ const MuiDrawer = ({ open, handleToggle, setShowJsonEdit }) => {
     setShowJsonEditor(!showJsonEditor);
   };
 
+  const handleJsonEditCallback = (json) => {
+    console.log('JSON passed to MuiDrawer:', json);
+  };
+
   return (
     <Drawer open={open} onClose={handleToggle} anchor="right">
       <Container p={2}>
@@ -30,7 +34,7 @@ const MuiDrawer = ({ open, handleToggle, setShowJsonEdit }) => {
         <Divider />
         <Box display="flex" flexDirection="column" justifyContent="flex-start">
           <Button onClick={toggleJsonEditor}>Json Editor</Button>
-          {showJsonEditor && <JsonEdit />}
+          {showJsonEditor && <JsonEdit parentCallback={handleJsonEditCallback} />}
           <Button>Grounding Tool</Button>
         </Box>
       </Container>

@@ -19,8 +19,8 @@ schema_key_dict = {
     'child': ['child', 'comment', 'optional', 'importance', 'outlinks'],
     'privateData': ['@type', 'template', 'repeatable', 'importance'],
     'entity': ['name', '@id', 'qnode', 'qlabel', 'centrality', 'wd_node', 'wd_label', 'wd_description', 'modality', 'aka','properties'],
-    'properties': ['property values']
-    # 'relation': ['name', 'wd_node', 'wd_label', 'modality', 'wd_description', 'ta1ref', 'relationSubject', 'relationObject', 'relationPredicate']
+    'properties': ['property values'],
+    'relation': ['name', 'wd_node', 'wd_label', 'modality', 'wd_description', 'ta1ref', 'relationSubject', 'relationObject', 'relationPredicate']
 }
 
 def create_node(_id, _label, _type, _shape=''):
@@ -339,8 +339,9 @@ def update_json(values):
     new_json = schema_json
     node_id = values['id']
     node_type = False
-    print('values:', values['key'])
-    key = node_id
+    print("Received Values: ", values)
+    print("node_id: ", node_id)
+    key = values['key']
     new_value = values['value']
     if key in ['source', 'target']:
         node_type = 'edge'
@@ -354,7 +355,7 @@ def update_json(values):
     # entities
     if node_type == 'entities':
         # entity data
-        for entity in new_json['entities']:
+        for entity in new_json['events']['entities']:
             if entity['@id'] == node_id:
                 entity[key] = new_value
         if key != '@id':
@@ -362,7 +363,7 @@ def update_json(values):
             return schema_json
         else:
             # relation data
-            for relation in new_json['relations']:
+            for relation in new_json['events']['relations']:
                 if relation['relationSubject'] == node_id:
                     relation['relationSubject'] = new_value
                 if relation['relationObject'] == node_id:
@@ -377,7 +378,7 @@ def update_json(values):
         child_key = 'child'
     else:
         child_key = key
-        
+
     for scheme in new_json['events']:
         # entity id search
         if node_type == 'entities':
@@ -388,7 +389,7 @@ def update_json(values):
                         # if entity is blank, add 'Entities/20000/'
                         if participant['entity'] == '':
                             participant['entity'] = 'Entities/20000/'
-                            
+
         else:
             # scheme data
             if scheme['@id'] == node_id:
@@ -473,30 +474,27 @@ def get_connected_nodes(selected_node):
 def homepage():
     return render_template('index.html')
 
-@app.route('/update-node-data', methods=['POST'])
-def update_node_data():
-    """Updates JSON with values.
+# @app.route('/update-node-data', methods=['POST'])
+# def update_node_data():
+#     """Updates JSON with values.
 
-    Parameters:
-    values (dict): contains node id, key, and value to change key to.
-    e.g. {id: node_id, key: name, value: Test}
+#     Parameters:
+#     values (dict): contains node id, key, and value to change key to.
+#     e.g. {id: node_id, key: name, value: Test}
 
-    Returns:
-    schemaJson (dict): new JSON 
-
-    Error code:
-    405: Method Not Allowed
-    Method is not allowed for the requested URL.
-    """
-    if request.method == 'POST':
-        values = request.get_json()
-        print(f'values: {values}')
-        new_json = update_json(values)
-        return json.dumps({
-            'schemaJson': new_json
-        })
-    else:
-        return 'Method not allowed', 405
+#     Returns:
+#     schemaJson (dict): new JSON 
+#     """
+#     if request.method == 'POST':
+#         values = request.get_json()
+#         print(f'Received values: {values}')
+#         new_json = update_json(values)
+#         return json.dumps({
+#             'schemaJson': new_json
+#         })
+#     else:
+#         print('Method not allowed')
+#         return 'Method not allowed', 405
 
 
 @app.route('/upload', methods=['POST'])

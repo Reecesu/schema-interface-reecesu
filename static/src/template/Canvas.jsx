@@ -210,13 +210,21 @@ download(event) {
                         this.setState({ selectedElement: elementData });
                         this.setState({ isGraphEditOpen: true });
                     },
-                    },
+                },
                 {
-                    id: 'remove-node',
+                    id: 'remove',
                     content: 'Remove',
                     selector: 'node, edge',
                     onClickFunction: (event) => {
-                        // remove node or edge from graph
+                        /**
+                        1. Remove selectedElement from JSON event list.
+                        2. Remove mention of selectedElement from outlinks list of all other events.
+                        3. Remove mention of selectedElement from children list of all other events.
+
+                        Delete selectedElement and connect children with root/parent
+
+
+                         */
                     },
                 },
                 {
@@ -224,7 +232,10 @@ download(event) {
                     content: 'Add Outlink',
                     selector: 'node[_shape = "diamond"], node[_shape = "ellipse"]',
                     onClickFunction: (event) => {
-                        // have user select another node, then add an edge from selectedElement to selected node
+                        /**
+                        1. Display list of all available nodes.
+                        2. Selected node @id is added to outlinks list of selectedElement.
+                         */
                     },
                 },
                 {
@@ -232,9 +243,35 @@ download(event) {
                     content: 'Add Chapter Event',
                     selector: 'node[_shape = "diamond"], node[_type = "gate"]',
                     onClickFunction: (event) => {
-                        // 1. Textfield prompt user to input chapter event name.
-                        // 2. append new template 'chapter event' to event list with name 'Events/10000/chapter:name'
-                        // 3. add new 'chapter event' id to children list of selectedElement
+                        /**
+                        1. Dialog prompt user to input chapter event 'name'.
+                        2. Unique @id is generated from 'Events/' + event_counter + '/' + 'name'.
+                        3. CHAPTER_TEMPLATE is appended to event list with unique @id, and name.
+                        4. Add new chapter event @id to children list of selectedElement.
+
+                        CHAPTER_TEMPLATE:
+
+                            {
+                                '@id': '',
+                                'name': '',
+                                'description': '',
+                                'wd_node': '',
+                                'wd_label': '',
+                                'wd_description': '',
+                                'isSchema': true,
+                                'repeatable': false,
+                                'optional': false,
+                                'children_gate': 'or',
+                                'outlinks': [],
+                                'participants': [],
+                                'children': [],
+                                'modality': [],
+                                'entities': [],
+                                'relations': [],
+                                'importance': [],
+                                'likelihood': []
+                            }
+                        */
                     }
                 },
                 {
@@ -242,9 +279,34 @@ download(event) {
                     content: 'Add Primitive Event',
                     selector: 'node[_shape = "diamond"], node[_type = "gate"]',
                     onClickFunction: (event) => {
-                        // 1. TextField prompt user to input 'primitive event' name.
-                        // 2. append new tempalte 'primitive event' to event list with name 'Events/10000/primitive:name'
-                        // 2. add new 'primitive event' id to children list of selectedElement
+                        /**
+                        1. Dialog prompt user to input primitive event 'name'.
+                        2. Unique @id is generated from 'Events/' + event_counter + '/' + 'name'.
+                        3. PRIMITIVE_TEMPLATE is appended to event list with unique @id, and name.
+                        4. Add new primitive event @id to children list of selectedElement.
+
+                        PRIMITIVE_TEMPLATE:
+
+                            {
+                                '@id': '',
+                                'name': '',
+                                'description': '',
+                                'wd_node': '',
+                                'wd_label': '',
+                                'wd_description': '',
+                                'isSchema': false,
+                                'repeatable': false,
+                                'optional': false,
+                                'outlinks': [],
+                                'participants': [],
+                                'modality': [],
+                                'importance': [],
+                                'likelihood': [],
+                                'entities': [],
+                                'relations': []
+
+                            },
+                        */
                     }
                 },
                 {
@@ -252,19 +314,62 @@ download(event) {
                     content: 'Add XOR Gate',
                     selector: 'node[_shape = "diamond"], node[_type = "ellipse"]',
                     onClickFunction: (event) => {
-                        // 1. add 'XOR gate' to event list, generate unique id
-                        // 2. add that unique id to children list of selectedElement
+                        /**
+                        1. Unique @id is generated from 'Events/' + event_counter + '/' + 'container:xor'.
+                        2. XOR_TEMPLATE is appended to event list with same name 'Events/2xxxx/container:xor'.
+                        3. Unique @id is added to children list of selectedElement.
+
+                        XOR_TEMPLATE:
+
+                            {
+                                '@id': '',
+                                'name': '',
+                                'comment': '',
+                                'isSchema': true,
+                                'optional': false,
+                                'children_gate': 'xor',
+                                'children': [],
+                                'outlinks': []
+
+                            },
+                        */
                     }
                 },
                 {
                     id: 'add-entity',
                     content: 'Add Entity',
-                    selector: 'node[_shape = "ellipse"]',
+                    selector: 'node[_shape = "diamond"], node[_type = "ellipse"]',
                     onClickFunction: (event) => {
-                        // 1. TextField popup
-                        // 2. user names entity and populates wd_node, wd_label, and wd_description
-                        // 3. unique id is generated from entity name
-                        // 4. append entity template to node entity list
+                        /**
+                        1. TextField appears.
+                        2. User inputs name, wd_node, wd_label, and wd_description (all but name can be blank).
+                        3. Unique @id is generated from 'Entities/' + entity_counter + '/' + 'name' (Entities/2xxxx/name).
+                        4. Append ENTITY_TEMPLATE to selectedElement entity list with same 'name' and @id 'Entities/xxxxx/name'.
+
+                        NOTE: entity_counter is a global variable that is incremented every time an entity is added.
+                                entites can be edited and removed from 'view-entites' menuItem on container and primitive events
+
+                        ENTITY_TEMPLATE:
+
+                            {
+                                "@id": "",
+                                "name": "",
+                                "wd_node": "",
+                                "wd_label": "",
+                                "wd_description": ""
+                            },
+                        */
+                    },
+                },
+                {
+                    id: 'view-entities',
+                    content: 'View Entities',
+                    selector: 'node[_shape = "diamond"], node[_type = "ellipse"]',
+                    onClickFunction: (event) => {
+                        /**
+                        1. Entities list is displayed on a table.
+                        2. User can 'edit' or 'remove' entities from the list.
+                        */
                     },
                 },
                 {
@@ -272,12 +377,29 @@ download(event) {
                     content: 'Add Relation',
                     selector: 'node[_type = "entity"]',
                     onClickFunction: (event) => {
-                        // have user select another entity node, then add an edge from selectedElement to selected node
-                        // "relationSubject" is first selectedElement id, "relationObject" is second selectedElement id
-                        // prompt user to name relation
-                        // generate unique relation id with relation name
-                        // 
-                        // wd_node, wd_label, and wd_description can be filled in with edit
+                        /** 
+                        1. System waits for user to select another entity node.
+                        2. Get second selectedElements @id.
+                        3. Dialog appears with six textfields.
+                        4. "relationSubject" populated with first selectedElement @id.
+                        5. "relationObject" populated with second selectedElement @id.
+                        6. 'name' is only other required field.
+                        7. Relation @id is generated from 'Relations/' + relation_counter + '/' + 'name'.
+                             NOTE: wd_node, wd_label, and wd_description can be filled in with edit if at first missing.
+                        8. RELATION_TEMPLATE is appended to selectedElement relation list with same name 'Relations/xxxxx/name'.
+
+                        RELATION_TEMPLATE:
+
+                            {
+                                "@id": "",
+                                "name": "",
+                                "relationSubject": "",
+                                "relationObject": "",
+                                "wd_node": "",
+                                "wd_label": "",
+                                "wd_description": ""
+                            },
+                        */
                     }
                 },
                 {
@@ -285,18 +407,31 @@ download(event) {
                     content: 'Add Participant',
                     selector: 'node[_shape = "ellipse"]',
                     onClickFunction: (event) => {
-                        // user selects from a list of available entities in root node and selectedElement
-                        // input roleName
-                        // generate unique participant id
+                        /** 
+                        1. Display table of available entities in root node 'entities': [] and selectedElement 'entities': [].
+                        2. PARTICIPANT_TEMPLATE is added to selectedElement 'participants': [].
+                        3. Participant @id is generated from 'Participants/' + participant_counter + '/' + 'name' (Participants/2xxxx/name).
+                        4. Selected 'entity' is set to "entity" field of PARTICIPANT_TEMPLATE.
+                        5. Participant 'roleName' is set to 'consult_XPO' (default).
+
+                        PARTICIPANT_TEMPLATE:
+
+                            {
+                                "@id": "",
+                                "roleName": "consult_XPO",
+                                "entity": ""
+                            },
+                
+                        */
                     }
                 },
                 {
                     id: 'undo',
                     content: 'Undo',
-                    coreAsWell: true,
                     onClickFunction: () => {
-                        // TODO: implement undo
-                        
+                        /**
+                        1. Undo last action.
+                        */     
                     },
                 }
             ],

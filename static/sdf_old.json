@@ -1,0 +1,402 @@
+{
+    "@context": [],
+    "@id": "",
+    "sdfVersion": "",
+    "version": "",
+    "events": [
+        {
+            "@id": "",
+            "name": "",
+            "description": "",
+            "ta1explanation": "",
+            "privateData": {
+                "template": "",
+                "repeatable": false,
+                "importance": 0
+            },
+            "children": [
+                {
+                    "child": "",
+                    "comment": "",
+                    "optional": true,
+                    "importance": 0,
+                    "outlinks": []
+                },
+                {
+                    "child": "",
+                    "comment": "",
+                    "optional": false,
+                    "importance": 0,
+                    "outlinks": []
+                },
+                {
+                    "child": "",
+                    "comment": "",
+                    "optional": false,
+                    "importance": 0,
+                    "outlinks": []
+                }
+            ],
+            "children_gate": ""
+        },
+        {
+            "@id": "",
+            "name": "",
+            "participants": [
+                {
+                    "@id": "",
+                    "roleName": "",
+                    "entity": ""
+                }
+            ],
+            "description": "",
+            "privateData": {
+                "@type": "",
+                "template": "",
+                "repeatable": false
+            }
+        },
+        {
+            "@id": "",
+            "name": "",
+            "comment": "",
+            "privateData": {
+                "@type": "",
+                "template": "",
+                "repeatable": true
+            },
+            "children": [
+                {
+                    "child": "",
+                    "comment": "",
+                    "optional": true,
+                    "importance": 0,
+                    "outlinks": []
+                },
+                {
+                    "child": "",
+                    "comment": "",
+                    "optional": false,
+                    "importance": 0,
+                    "outlinks": []
+                }
+            ],
+            "children_gate": ""
+        },
+        {
+            "@id": "",
+            "name": "",
+            "comment": "",
+            "privateData": {
+                "@type": "",
+                "template": "",
+                "repeatable": false
+            },
+            "children": [
+                {
+                    "child": "",
+                    "comment": "",
+                    "optional": true,
+                    "importance": 0,
+                    "outlinks": []
+                },
+                {
+                    "child": "",
+                    "comment": "",
+                    "optional": false,
+                    "importance": 0,
+                    "outlinks": []
+                },
+                {
+                    "child": "",
+                    "comment": "Pay",
+                    "optional": false,
+                    "importance": 0,
+                    "outlinks": []
+                },
+                {
+                    "child": "",
+                    "comment": "",
+                    "optional": false,
+                    "importance": 0,
+                    "outlinks": []
+                },
+                {
+                    "child": "",
+                    "comment": "",
+                    "optional": false,
+                    "importance": 0,
+                    "outlinks": []
+                }
+            ],
+            "children_gate": ""
+        },
+        {
+            "@id": "",
+            "name": "",
+            "comment": "",
+            "participants": [
+                {
+                    "@id": "",
+                    "roleName": "",
+                    "entity": ""
+                },
+                {
+                    "@id": "",
+                    "roleName": "",
+                    "entity": ""
+                },
+                {
+                    "@id": "",
+                    "roleName": "",
+                    "entity": ""
+                },
+                {
+                    "@id": "",
+                    "roleName": "",
+                    "entity": ""
+                }
+            ],
+            "privateData": {
+                "@type": "",
+                "template": "",
+                "repeatable": false
+            }
+        },
+        {
+            "@id": "",
+            "name": "",
+            "comment": "",
+            "participants": [
+                {
+                    "@id": "",
+                    "roleName": "",
+                    "entity": ""
+                },
+                {
+                    "@id": "",
+                    "roleName": "",
+                    "entity": ""
+                },
+                {
+                    "@id": "",
+                    "roleName": "",
+                    "entity": ""
+                },
+                {
+                    "@id": "",
+                    "roleName": "",
+                    "entity": ""
+                }
+            ],
+            "privateData": {
+                "@type": "",
+                "template": "",
+                "repeatable": false
+            }
+        },
+        {
+            "@id": "",
+            "name": "",
+            "comment": "",
+            "participants": [
+                {
+                    "@id": "",
+                    "roleName": "",
+                    "entity": ""
+                },
+                {
+                    "@id": "",
+                    "roleName": "",
+                    "entity": ""
+                },
+                {
+                    "@id": "",
+                    "roleName": "",
+                    "entity": ""
+                }
+            ],
+            "privateData": {
+                "@type": "",
+                "template": "",
+                "repeatable": false
+            }
+        },
+        {
+            "@id": "",
+            "name": "",
+            "comment": "",
+            "participants": [
+                {
+                    "@id": "",
+                    "roleName": "",
+                    "entity": ""
+                },
+                {
+                    "@id": "",
+                    "roleName": "",
+                    "entity": ""
+                },
+                {
+                    "@id": "",
+                    "roleName": "",
+                    "entity": ""
+                }
+            ],
+            "privateData": {
+                "@type": "",
+                "template": "",
+                "repeatable": false
+            }
+        },
+        {
+            "@id": "",
+            "name": "",
+            "comment": "",
+            "participants": [
+                {
+                    "@id": "",
+                    "roleName": "",
+                    "entity": ""
+                },
+                {
+                    "@id": "",
+                    "roleName": "",
+                    "entity": ""
+                },
+                {
+                    "@id": "",
+                    "roleName": "",
+                    "entity": ""
+                }
+            ],
+            "privateData": {
+                "@type": "",
+                "template": "",
+                "repeatable": false
+            }
+        },
+        {
+            "@id": "",
+            "name": "",
+            "comment": "",
+            "participants": [
+                {
+                    "@id": "",
+                    "roleName": "",
+                    "entity": ""
+                },
+                {
+                    "@id": "",
+                    "roleName": "",
+                    "entity": ""
+                }
+            ],
+            "privateData": {
+                "@type": "",
+                "template": "",
+                "repeatable": false
+            }
+        },
+        {
+            "@id": "",
+            "name": "",
+            "comment": "",
+            "privateData": {
+                "@type": "",
+                "template": "",
+                "repeatable": false
+            },
+            "participants": [
+                {
+                    "@id": "",
+                    "roleName": "",
+                    "entity": ""
+                },
+                {
+                    "@id": "",
+                    "roleName": "",
+                    "entity": ""
+                },
+                {
+                    "@id": "",
+                    "roleName": "",
+                    "entity": ""
+                },
+                {
+                    "@id": "",
+                    "roleName": "",
+                    "entity": ""
+                }
+            ]
+        },
+        {
+            "@id": "",
+            "name": "",
+            "comment": "",
+            "aka": "",
+            "minDuration": "",
+            "maxDuration": "",
+            "children": [
+                {
+                    "child": "",
+                    "comment": "",
+                    "optional": false,
+                    "importance": 0,
+                    "outlinks": []
+                },
+                {
+                    "child": "",
+                    "comment": "",
+                    "optional": false,
+                    "importance": 0,
+                    "outlinks": []
+                }
+            ],
+            "description": "",
+            "goal": "",
+            "ta1explanation": "",
+            "children_gate": "",
+            "privateData": {
+                "@type": "",
+                "template": "",
+                "repeatable": false
+            }
+        }
+    ],
+    "entities": [
+        {
+            "@id": "",
+            "name": "",
+            "qnode": "",
+            "qlabel": ""
+        },
+        {
+            "@id": "",
+            "name": "",
+            "qnode": "",
+            "qlabel": ""
+        },
+        {
+            "@id": "",
+            "name": "",
+            "qnode": "",
+            "qlabel": ""
+        },
+        {
+            "@id": "",
+            "name": "",
+            "qnode": "",
+            "qlabel": ""
+        }
+    ],
+    "relations": [
+        {
+            "relationSubject": "",
+            "relationPredicate": "",
+            "relationObject": "",
+            "@id": "",
+            "name": ""
+        }
+    ]
+}

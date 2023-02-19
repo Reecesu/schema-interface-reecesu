@@ -57,9 +57,9 @@ export default class JSONEdit extends Component {
                     title: 'Insert Participant',
                     field: '',
                     value: {
-                        '@id': 'Participants/20000/',
+                        '@id': '',
                         'roleName': 'consult_XPO',
-                        'entity': 'Entities/00001/'
+                        'entity': ''
                     }
                 },
                 {
@@ -67,7 +67,7 @@ export default class JSONEdit extends Component {
                     title: 'Insert Property',
                     field: '',
                     value: {
-                        '@id': 'Properties/40000/',
+                        '@id': '',
                         'name': '',
                         'wd_node': '',
                         'wd_label': '',
@@ -81,12 +81,12 @@ export default class JSONEdit extends Component {
                     title: 'Insert Event',
                     field: '',
                     value: {
-                        '@id': 'Events/10000/',
+                        '@id': '',
                         'name': '',
                         'description': '',
-                        'wd_node': ['wd:'],
-                        'wd_label': [''],
-                        'wd_description': [''],
+                        'wd_node': '',
+                        'wd_label': '',
+                        'wd_description': '',
                         'isSchema': false,
                         'repeatable': false,
                         'optional': false,
@@ -104,9 +104,9 @@ export default class JSONEdit extends Component {
                     title: 'Insert Entity',
                     field: '',
                     value: {
-                        '@id': 'Entities/20000/',
+                        '@id': '',
                         'name': '',
-                        'wd_node': 'wd:',
+                        'wd_node': '',
                         'wd_label': '',
                         'wd_description': ''
                     }
@@ -116,11 +116,11 @@ export default class JSONEdit extends Component {
                     title: 'Insert Relation',
                     field: '',
                     value: {
-                        '@id': 'Relations/30000/',
+                        '@id': '',
                         'name': '',
-                        'relationSubject': 'Entities/20000/',
-                        'relationObject': 'Entities/20001/',
-                        'wd_node': 'wdt:',
+                        'relationSubject': '',
+                        'relationObject': '',
+                        'wd_node': '',
                         'wd_label': '',
                         'wd_description': ''
                     }
@@ -130,10 +130,10 @@ export default class JSONEdit extends Component {
                     title: 'Insert Container',
                     field: '',
                     value: {
-                        '@id': 'Events/10000/Container:',
-                        'name': 'Event outlinks',
-                        'comment': 'container node',
-                        'isSchema': false,
+                        '@id': '',
+                        'name': '',
+                        'comment': '',
+                        'isSchema': true,
                         'optional': false,
                         'children_gate': 'xor',
                         'children': [],
@@ -145,13 +145,13 @@ export default class JSONEdit extends Component {
                     title: 'Insert Container Event',
                     field: '',
                     value: {
-                        '@id': 'Events/10000/Container:',
+                        '@id': '',
                         'name': '',
                         'description': '',
-                        'wd_node': ['wd:'],
-                        'wd_label': [''],
-                        'wd_description': [''],
-                        'isSchema': false,
+                        'wd_node': '',
+                        'wd_label': '',
+                        'wd_description': '',
+                        'isSchema': true,
                         'repeatable': false,
                         'optional': false,
                         'children_gate': 'or',

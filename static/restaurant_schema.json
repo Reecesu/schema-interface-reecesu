@@ -1,0 +1,414 @@
+{
+    "@context": [],
+    "@id": "Sample_Schema",
+    "sdfVersion": "1.4",
+    "version": "Sample_Schema",
+    "events": [
+        {
+            "@id": "Events/10000/Events_restaurant_event",
+            "name": "Restaurant Event",
+            "description": "Restaurant Event",
+            "ta1explanation": "",
+            "privateData": {
+                "template": "",
+                "repeatable": false,
+                "importance": 1
+            },
+            "children": [
+                {
+                    "child": "Events/10001/Primitive_Events_Go_to_Restaurant",
+                    "comment": "Go to Restaurant",
+                    "optional": true,
+                    "importance": 1,
+                    "outlinks": [
+                        "Events/10002/Steps_kairos:Container:1"
+                    ]
+                },
+                {
+                    "child": "Events/10002/Steps_kairos:Container:1",
+                    "comment": "Order",
+                    "optional": false,
+                    "importance": 1,
+                    "outlinks": [
+                        "Events/10003/Steps_kairos:Container:2"
+                    ]
+                },
+                {
+                    "child": "Events/10003/Steps_kairos:Container:2",
+                    "comment": "Receive Food",
+                    "optional": false,
+                    "importance": 1,
+                    "outlinks": []
+                }
+            ],
+            "children_gate": "or"
+        },
+        {
+            "@id": "Events/10001/Primitive_Events_Go_to_Restaurant",
+            "name": "Go to Restaurant",
+            "participants": [
+                {
+                    "@id": "Participants/20000/Go_to_Restaurant_Consumer",
+                    "roleName": "A0-Consumer",
+                    "entity": "Entities/00000/"
+                }
+            ],
+            "description": "",
+            "privateData": {
+                "@type": "",
+                "template": "",
+                "repeatable": false
+            }
+        },
+        {
+            "@id": "Events/10002/Steps_kairos:Container:1",
+            "name": "Order",
+            "comment": "container node",
+            "privateData": {
+                "@type": "kairos:Container",
+                "template": "",
+                "repeatable": true
+            },
+            "children": [
+                {
+                    "child": "Events/10005/Primitives_Events_Talk_to_Waiter",
+                    "comment": "Talk to Waiter",
+                    "optional": true,
+                    "importance": 1,
+                    "outlinks": []
+                },
+                {
+                    "child": "Events/10006/Primitives_Events_Talk_to_Intercom",
+                    "comment": "Talk to Intercom",
+                    "optional": false,
+                    "importance": 1,
+                    "outlinks": []
+                }
+            ],
+            "children_gate": "or"
+        },
+        {
+            "@id": "Events/10003/Steps_kairos:Container:2",
+            "name": "Receive Food",
+            "comment": "container node",
+            "privateData": {
+                "@type": "kairos:Container",
+                "template": "",
+                "repeatable": false
+            },
+            "children": [
+                {
+                    "child": "Events/10007/Primitives_Events_Take_Food_From_Buffet",
+                    "comment": "Take Food From Buffet",
+                    "optional": true,
+                    "importance": 1,
+                    "outlinks": [
+                        "Events/10009/Primitives_Events_Eat"
+                    ]
+                },
+                {
+                    "child": "Events/10009/Primitives_Events_Eat",
+                    "comment": "Eat",
+                    "optional": false,
+                    "importance": 1,
+                    "outlinks": [
+                        "Events/10007/Primitives_Events_Pay"
+                    ]
+                },
+                {
+                    "child": "Events/10007/Primitives_Events_Pay",
+                    "comment": "Pay",
+                    "optional": false,
+                    "importance": 1,
+                    "outlinks": [
+                        "Events/10010/Primitives_Events_Leave"
+                    ]
+                },
+                {
+                    "child": "Events/10010/Primitives_Events_Leave",
+                    "comment": "Leave",
+                    "optional": false,
+                    "importance": 1,
+                    "outlinks": []
+                },
+                {
+                    "child": "Events/10011/Primitives_Events_Get_Food_from_Clerk",
+                    "comment": "Get Food from Clerk",
+                    "optional": false,
+                    "importance": 1,
+                    "outlinks": [
+                        "resin:Events/10100/Steps_kairos:Container:100"
+                    ]
+                }
+            ],
+            "children_gate": "or"
+        },
+        {
+            "@id": "Events/10005/Primitives_Events_Talk_to_Waiter",
+            "name": "Talk to Waiter",
+            "comment": "",
+            "participants": [
+                {
+                    "@id": "Participants/20002/Talk_to_Waiter_Orderer",
+                    "roleName": "A0-Orderer",
+                    "entity": "Entities/00000/"
+                },
+                {
+                    "@id": "Participants/20003/Talk_to_Waiter_Waiter",
+                    "roleName": "A1-Waiter",
+                    "entity": "Entities/00002/"
+                },
+                {
+                    "@id": "Participants/20004/Talk_to_Waiter_Order",
+                    "roleName": "A2-Order",
+                    "entity": "Entities/00003/"
+                },
+                {
+                    "@id": "Participants/20005/Talk_to_Waiter_Location",
+                    "roleName": "AM_loc",
+                    "entity": "Entities/00001/"
+                }
+            ],
+            "privateData": {
+                "@type": "",
+                "template": "",
+                "repeatable": false
+            }
+        },
+        {
+            "@id": "Events/10006/Primitives_Events_Talk_to_Intercom",
+            "name": "Talk to Intercom",
+            "comment": "",
+            "participants": [
+                {
+                    "@id": "Participants/20006/Talk_to_Telecom_Orderer",
+                    "roleName": "A0-Orderer",
+                    "entity": "Entities/00000/"
+                },
+                {
+                    "@id": "Participants/20007/Talk_to_Telecom_Staff",
+                    "roleName": "A1-Staff",
+                    "entity": "Entities/00002/"
+                },
+                {
+                    "@id": "Participants/20008/Talk_to_Telecom_Order",
+                    "roleName": "A2-Order",
+                    "entity": "Entities/00003/"
+                },
+                {
+                    "@id": "Participants/20009/Talk_to_Telecom_Location",
+                    "roleName": "AM_loc",
+                    "entity": "Entities/00001/"
+                }
+            ],
+            "privateData": {
+                "@type": "",
+                "template": "",
+                "repeatable": false
+            }
+        },
+        {
+            "@id": "Events/10007/Primitives_Events_Take_Food_From_Buffet",
+            "name": "Take Food From Buffet",
+            "comment": "",
+            "participants": [
+                {
+                    "@id": "Participants/20010/Food_From_Buffet_Consumer",
+                    "roleName": "A0-consumer",
+                    "entity": "Entities/00000/"
+                },
+                {
+                    "@id": "Participants/20011/Food_From_Buffet_Consumed",
+                    "roleName": "A1-consumed",
+                    "entity": "Entities/00003/"
+                },
+                {
+                    "@id": "Participants/20012/Food_From_Buffet_Location",
+                    "roleName": "AM_loc",
+                    "entity": "Entities/00001/"
+                }
+            ],
+            "privateData": {
+                "@type": "",
+                "template": "",
+                "repeatable": false
+            }
+        },
+        {
+            "@id": "Events/10007/Primitives_Events_Pay",
+            "name": "Pay",
+            "comment": "",
+            "participants": [
+                {
+                    "@id": "Participants/20013/Pay_Payer",
+                    "roleName": "A0-Payer",
+                    "entity": "Entities/00000/"
+                },
+                {
+                    "@id": "Participants/20014/Pay_Receiver",
+                    "roleName": "A1-Receiver_of_payment",
+                    "entity": "Entities/00002/"
+                },
+                {
+                    "@id": "Participants/20015/Pay_Location",
+                    "roleName": "AM_loc",
+                    "entity": "Entities/00001/"
+                }
+            ],
+            "privateData": {
+                "@type": "justice.judicialconsequences.mediation",
+                "template": "",
+                "repeatable": false
+            }
+        },
+        {
+            "@id": "Events/10009/Primitives_Events_Eat",
+            "name": "Eat",
+            "comment": "",
+            "participants": [
+                {
+                    "@id": "Participants/20016/Eat_eater",
+                    "roleName": "A0-eater",
+                    "entity": "Entities/00000/"
+                },
+                {
+                    "@id": "Participants/20017/Eat_consumed",
+                    "roleName": "A1-consumed",
+                    "entity": "Entities/00003/"
+                },
+                {
+                    "@id": "Participants/20018/Eat_Location",
+                    "roleName": "AM_loc",
+                    "entity": "Entities/00001/"
+                }
+            ],
+            "privateData": {
+                "@type": "",
+                "template": "",
+                "repeatable": false
+            }
+        },
+        {
+            "@id": "Events/10010/Primitives_Events_Leave",
+            "name": "Leave",
+            "comment": "",
+            "participants": [
+                {
+                    "@id": "Participants/20019/Leave_leaver",
+                    "roleName": "A0-leaver",
+                    "entity": "Entities/00000/"
+                },
+                {
+                    "@id": "Participants/20020/Leave_Location",
+                    "roleName": "AM_loc",
+                    "entity": "Entities/00001/"
+                }
+            ],
+            "privateData": {
+                "@type": "",
+                "template": "",
+                "repeatable": false
+            }
+        },
+        {
+            "@id": "Events/10011/Primitives_Events_Get_Food_from_Clerk",
+            "name": "Get Food from Clerk",
+            "comment": "",
+            "privateData": {
+                "@type": "drinking_Q876776",
+                "template": "",
+                "repeatable": false
+            },
+            "participants": [
+                {
+                    "@id": "Participants/20022/Food_From_Clerk_Receiver",
+                    "roleName": "A0-receiver",
+                    "entity": "Entities/00000/"
+                },
+                {
+                    "@id": "Participants/20023/Food_From_Clerk_Giver",
+                    "roleName": "A1-giver",
+                    "entity": "Entities/00002/"
+                },
+                {
+                    "@id": "Participants/20024/Food_From_Clerk_Thing_Received",
+                    "roleName": "A2-thing_received",
+                    "entity": "Entities/00003/"
+                },
+                {
+                    "@id": "Participants/20025/Food_From_Clerk_Location",
+                    "roleName": "AM_loc",
+                    "entity": "Entities/00001/"
+                }
+            ]
+        },
+        {
+            "@id": "resin:Events/10100/Steps_kairos:Container:100",
+            "name": "Food outlinks",
+            "comment": "container node",
+            "aka": "",
+            "minDuration": "",
+            "maxDuration": "",
+            "children": [
+                {
+                    "child": "Events/10007/Primitives_Events_Pay",
+                    "comment": "Pay",
+                    "optional": false,
+                    "importance": 1,
+                    "outlinks": []
+                },
+                {
+                    "child": "Events/10009/Primitives_Events_Eat",
+                    "comment": "Eat",
+                    "optional": false,
+                    "importance": 1,
+                    "outlinks": []
+                }
+            ],
+            "description": "",
+            "goal": "",
+            "ta1explanation": "",
+            "children_gate": "xor",
+            "privateData": {
+                "@type": "kairos:Container",
+                "template": "",
+                "repeatable": false
+            }
+        }
+    ],
+    "entities": [
+        {
+            "@id": "Entities/00000/",
+            "name": "consumer",
+            "qnode": "wd:Q5",
+            "qlabel": "human"
+        },
+        {
+            "@id": "Entities/00001/",
+            "name": "restaurant",
+            "qnode": "wd:Q11707",
+            "qlabel": "restaurant"
+        },
+        {
+            "@id": "Entities/00002/",
+            "name": "restaurant staff",
+            "qnode": "wd:Q5",
+            "qlabel": "human"
+        },
+        {
+            "@id": "Entities/00003/",
+            "name": "food",
+            "qnode": "wd:Q2095",
+            "qlabel": "food"
+        }
+    ],
+    "relations": [
+        {
+            "relationSubject": "Entities/00002/",
+            "relationPredicate": "wiki:Q21503252",
+            "relationObject": "Entities/00001/",
+            "@id": "Relations/30000/",
+            "name": "member of"
+        }
+    ]
+}

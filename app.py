@@ -87,6 +87,7 @@ def extend_node(node, obj):
         for key in obj['privateData'].keys():
             if key in schema_key_dict['privateData']:
                 node['data'][key] = obj['privateData'][key]
+    # print("\nnode from extend_node:", node)
     return node
 
 def get_entities(entities):
@@ -108,6 +109,7 @@ def get_entities(entities):
     if len(nodes) == 0:
         nodes['Entities/20000/'] = create_node('Entities/20000/', 'Entity', 'entity')
 
+    # print("\nnodes from get_entities:", nodes)
     return nodes
 
 def get_relations(relations):
@@ -131,6 +133,7 @@ def get_relations(relations):
         edge['data']['predicate'] = relation.get('relationPredicate', relation.get('wd_node', ''))
         edges.append(edge)
 
+    # print("\nedges from get_relations:", edges)
     return edges
 
 def handle_containers(nodes, edges, containers):
@@ -178,6 +181,8 @@ def handle_containers(nodes, edges, containers):
     for index in edges_to_remove:
         edges.remove(index)
     
+    # print("\nnodes from handle_containers:", nodes)
+    # print("\nedges from handle_containers:", edges)
     return nodes, edges
 
 def get_nodes_and_edges(schema_json):
@@ -302,7 +307,11 @@ def get_nodes_and_edges(schema_json):
     # Zoey wants an entity-first view, so all entities are shown, with groups of events around them in clusters
         # Q: are we able to make a tab on the viewer itself to switch between views?
         
+    # print("\nnodes from get_nodes_and_edges:", nodes)
+    # print("\nedges from get_nodes_and_edges:", edges)
     return nodes, edges
+
+# NOTE: These are new??
 
 def fix_participants(schema_json):
     for event in schema_json['events']:
@@ -328,20 +337,25 @@ def fix_entities(schema_json):
 
 # TODO: update sideEditor to handle SDF 3.0
 @app.route('/update_json', methods=['POST'])
-def update_json():
+def update_json(values):
     """Updates JSON with values.
 
     Parameters:
     values (dict): contains node id, key, and value to change key to.
     e.g. {@id: node_id, key: , new value: }
 
+
+    {'id': 'Events/10000/Container:Chapter_1', 'updatedFields': {'name': 'Chapter test', 'description': 'test', 'isSchema': 'false'}}
+
     Returns:
     schemaJson (dict): new JSON 
     """
     global schema_json
-    values = json.loads(request.data.decode("utf-8"))
+    print("\nupdate_json values\n", values)
+    # values = json.loads(request.data.decode("utf-8"))
     node_id = values['id']
-    print("Received Values: \n", values)
+    print("\nschema_json before loops:", schema_json)
+    # print("Received Values: \n", values)
     
     # Find the node to update in the schema_json object
     node_to_update = None
@@ -367,22 +381,9 @@ def update_json():
     # regenerate schema JSON, since values may have changed
     fix_participants(schema_json)
     fix_entities(schema_json)
+    print("\nschema_json from update_json:", schema_json)
 
-    global nodes
-    global edges
-    nodes, edges = get_nodes_and_edges(schema_json)
-    schema_name, parsed_schema = get_connected_nodes('root')
-    print("\nSchema JSON: \n", schema_json)
-    
-    # save the regenerated schema JSON to the global variable
-    schema_json = parsed_schema
-    print("\nUpdated schema JSON: \n", schema_json)
-
-    return json.dumps({
-        'parsedSchema': parsed_schema,
-        'name': schema_name,
-        'schemaJson': schema_json
-    })
+    return schema_json
 
 # def update_json():
 #     """Updates JSON with values.
@@ -479,6 +480,8 @@ def update_json():
 #     schema_json = new_json
 #     return schema_json
 
+
+# not passed through here either!
 def get_connected_nodes(selected_node):
     """Constructs graph to be visualized by the viewer.
 
@@ -528,6 +531,10 @@ def get_connected_nodes(selected_node):
                 if edge['data']['target'] in id_set and edge['data']['_edge_type'] == 'relation':
                     e.append(edge)
 
+
+    # print("\nroot_node from get_connected_nodes:", root_node)
+    # print("\nnodes from get_connected_nodes:", n)
+    # print("\nedges from get_connected_nodes:", e)
     return root_node['data']['name'], {'nodes': n, 'edges': e}
 
 @app.route('/')
@@ -547,12 +554,16 @@ def upload():
     schema_json = json.loads(schema_string)
     nodes, edges = get_nodes_and_edges(schema_json)
     schema_name, parsed_schema = get_connected_nodes('root')
+    # print("\nschema_name from upload:", schema_name)
+    # print("\nparsed_schema from upload:", parsed_schema)
+    # print("\nschema_json from upload:", schema_json)
     return json.dumps({
         'parsedSchema': parsed_schema,
         'name': schema_name,
         'schemaJson': schema_json
     })
 
+# TODO: get_subtree_or_update_node not accessed
 @app.route('/node', methods=['GET', 'POST'])
 def get_subtree_or_update_node():
     if not (bool(nodes) and bool(edges)):
@@ -567,8 +578,10 @@ def get_subtree_or_update_node():
         """Posts updates to selected node and reloads schema."""
         values = json.loads(request.data.decode("utf-8"))
         new_json = update_json(values)
+        print("\nnew_json from get_subtree_or_update_node:", new_json)
         return json.dumps(new_json)
 
+# TODO: reload_schema not accessed
 @app.route('/reload', methods=['POST'])
 def reload_schema():
     """Reloads schema; does the same thing as upload."""
@@ -580,6 +593,9 @@ def reload_schema():
     schema_json = json.loads(schema_string)
     nodes, edges = get_nodes_and_edges(schema_json)
     schema_name, parsed_schema = get_connected_nodes('root')
+    # print("\nschema_name from reload_schema:", schema_name)
+    # print("\nparsed_schema from reload_schema:", parsed_schema)
+    print("\nschema_json from reload_schema:", schema_json)    
     return json.dumps({
         'parsedSchema': parsed_schema,
         'name': schema_name,

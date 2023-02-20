@@ -497,6 +497,7 @@ render() {
                 isOpen={this.state.isGraphEditOpen}
                 handleOpen={this.handleOpen}
                 handleSubmit={this.handleSubmit}
+                sideEditorCallback={this.props.sideEditorCallback}
                 />
             </div>
         );

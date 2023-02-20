@@ -463,7 +463,7 @@ def append_node():
     """
     global schema_json
     new_event = request.get_json()
-    selected_element = request.args.get('selected_element')
+    selected_element = new_event['parent_id'] #request.args.get('selected_element')
 
     print(f"new_event: {new_event}")
     print(f"selected_element: {selected_element}")

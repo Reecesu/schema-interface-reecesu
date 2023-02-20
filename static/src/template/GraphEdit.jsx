@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useRef } from "react";
-// import "regenerator-runtime/runtime";
 import axios from "axios";
 import { isBoolean, isEmpty } from "lodash";
 import { 
@@ -83,6 +82,18 @@ const GraphEdit = React.forwardRef((props, ref) => {
     });
   };
 
+  const addChapterEventIdToChildren = (newEventId, selectedElementId) => {
+    schema_json['events'].forEach(element => {
+      if (element['@id'] === selectedElementId) {
+        if (!element.children) {
+          element.children = [newEventId];
+        } else {
+          element.children.push(newEventId);
+        }
+      }
+    });
+  };
+
   const handleSubmit = (e) => {
     // create data to pass up
     const node_data = {
@@ -98,16 +109,36 @@ const GraphEdit = React.forwardRef((props, ref) => {
       }
     });
   
-    console.log("The node data from handleSubmit:\n", node_data);
-    
+    console.log("\n(GRAPHEDIT.JSX) The node data from handleSubmit:\n", node_data);
+  
     // change sidebar internal id if the id is changed
-    if(e.target.id === '@id'){
+    if (e.target.id === '@id') {
       data.selectedElement['id'] = e.target.value;
       setData({ ...data });
-      console.log(data.selectedElement['id']);
+      console.log("(GRAPHEDIT.JSX) Selected element id updated to:", data.selectedElement['id']);
     }
   
-    props.sideEditorCallback(node_data);
+    // Determine which action to take based on the props
+    if (props.action === "addOutlink") {
+      // Add outlink to selected element
+    } else {
+      // Update element fields
+      props.sideEditorCallback(node_data);
+  
+      // Update the events list in the schema JSON with the new chapter event
+      if (node_data.updatedFields.name) {
+        console.log("(GRAPHEDIT.JSX) Sending chapter event to server:", data.selectedElement);
+        axios.post("/add_event", data.selectedElement)
+          .then(res => {
+            console.log("Response from server: ", res.data);
+            props.updateCallback(res.data);
+          })
+          .catch(err => {
+            console.error(err);
+          });
+      }
+    }
+  
     handleClose();
   };
   
@@ -119,7 +150,7 @@ const GraphEdit = React.forwardRef((props, ref) => {
   };
 
   let i = 0;
-  const excluded_ids = ['id', '_label', '_type', '_shape', 'outlinks', '_edge_type', 'child', 'children','participants' ,'entities' ,'relations' , 'key']
+  const excluded_ids = ['id', '_label', '_type', '_shape', '_edge_type', 'child','participants' ,'entities' ,'relations', 'children_gate', 'key']
   const selectedElement = data.selectedElement || {};
 
   console.log("data: ", data);

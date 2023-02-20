@@ -1,5 +1,6 @@
 import React from 'react';
 import CytoscapeComponent from 'react-cytoscapejs';
+import templates from './templates';
 import cytoscape from 'cytoscape';
 import klay from 'cytoscape-klay';
 import contextMenus from 'cytoscape-context-menus';
@@ -27,6 +28,11 @@ cytoscape.use(contextMenus);
     Left click to expand node, right click to expand / collapse sidebar of information.
     Right click also gives a context menu to remove elements for visualization purposes. 
 */
+
+let event_counter = 20000;
+let entity_counter = 10000;
+let relation_counter = 30000;
+let participant_counter = 20000;
 
 class Canvas extends React.Component {
 constructor(props) {
@@ -131,8 +137,15 @@ reloadCanvas() {
 }
 
 removeObject(event) {
-    this.setState({ removed: event.target });
-    event.target.remove();
+    const removedElement = event.target;
+    const removedData = removedElement.data();
+    const newElements = this.state.canvasElements.filter((element) => !equal(element.data, removedData));
+
+    this.setState({
+        canvasElements: newElements,
+    });
+
+    removedElement.remove();
 }
 
 restore() {
@@ -155,6 +168,24 @@ handleClose = () => {
 fitCanvas() {
     this.cy.fit();
 }
+
+addChapterEvent = (chapterEvent, selectedElementId) => {
+    // add new chapter event @id to children list of selectedElement
+    const selectedElement = this.state.selectedElement;
+    selectedElement.children.push(chapterEvent['@id']);
+    this.setState({ selectedElement });
+  
+    // make POST request to add the new chapter event to the schema JSON
+    axios.post(`/add_event?selected_element=${selectedElementId}`, chapterEvent)
+      .then((response) => {
+        console.log(response.data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+    console.log('chapterEvent:', chapterEvent);
+    console.log('selectedElementId:', selectedElementId);
+  };
 
 download(event) {
     event.preventDefault();
@@ -216,15 +247,16 @@ download(event) {
                     content: 'Remove',
                     selector: 'node, edge',
                     onClickFunction: (event) => {
-                        /**
+                        this.removeObject(event);
+
+                        /**                         
+                        TODO:
                         1. Remove selectedElement from JSON event list.
                         2. Remove mention of selectedElement from outlinks list of all other events.
                         3. Remove mention of selectedElement from children list of all other events.
-
-                        Delete selectedElement and connect children with root/parent
-
-
+                        4. f the selectedElement had items in it's children list, those items should be added the children list of selectedElement's parent node.
                          */
+
                     },
                 },
                 {
@@ -243,70 +275,47 @@ download(event) {
                     content: 'Add Chapter Event',
                     selector: 'node[_shape = "diamond"], node[_type = "gate"]',
                     onClickFunction: (event) => {
-                        /**
-                        1. Dialog prompt user to input chapter event 'name'.
-                        2. Unique @id is generated from 'Events/' + event_counter + '/' + 'name'.
-                        3. CHAPTER_TEMPLATE is appended to event list with unique @id, and name.
-                        4. Add new chapter event @id to children list of selectedElement.
-
-                        CHAPTER_TEMPLATE:
-
-                            {
-                                '@id': '',
-                                'name': '',
-                                'description': '',
-                                'wd_node': '',
-                                'wd_label': '',
-                                'wd_description': '',
-                                'isSchema': true,
-                                'repeatable': false,
-                                'optional': false,
-                                'children_gate': 'or',
-                                'outlinks': [],
-                                'participants': [],
-                                'children': [],
-                                'modality': [],
-                                'entities': [],
-                                'relations': [],
-                                'importance': [],
-                                'likelihood': []
-                            }
-                        */
-                    }
+                        event.preventDefault();
+                      
+                        const elementData = event.target.data();
+                        this.setState({ selectedElement: elementData });
+                        const eventName = prompt('Enter chapter event name:');
+                        if (eventName) {
+                            const chapterEvent = {
+                                ...templates.chapterEvent,
+                                '@id': `Events/${event_counter++}/${eventName}`,
+                                'name': eventName
+                            };
+                            console.log("\n(CANVAS.JSX) Adding chapter event:\n", chapterEvent);
+                            this.addChapterEvent(chapterEvent);
+                        }
+                      }
                 },
                 {
                     id: 'add-primitive-event',
                     content: 'Add Primitive Event',
                     selector: 'node[_shape = "diamond"], node[_type = "gate"]',
                     onClickFunction: (event) => {
+                        event.preventDefault();
                         /**
                         1. Dialog prompt user to input primitive event 'name'.
                         2. Unique @id is generated from 'Events/' + event_counter + '/' + 'name'.
                         3. PRIMITIVE_TEMPLATE is appended to event list with unique @id, and name.
                         4. Add new primitive event @id to children list of selectedElement.
-
-                        PRIMITIVE_TEMPLATE:
-
-                            {
-                                '@id': '',
-                                'name': '',
-                                'description': '',
-                                'wd_node': '',
-                                'wd_label': '',
-                                'wd_description': '',
-                                'isSchema': false,
-                                'repeatable': false,
-                                'optional': false,
-                                'outlinks': [],
-                                'participants': [],
-                                'modality': [],
-                                'importance': [],
-                                'likelihood': [],
-                                'entities': [],
-                                'relations': []
-
-                            },
                         */
+                       const elementData = event.target.data();
+                        this.setState({ selectedElement: elementData });
+                        const eventName = prompt('Enter primitive event name:');
+                        if (eventName) {
+                            const primitiveEvent = {
+                                ...templates.primitiveEvent,
+                                '@id': `Events/${event_counter++}/${eventName}`,
+                                'name': eventName
+                            };
+                            console.log("\n(CANVAS.JSX) Adding primitive event:\n", primitiveEvent);
+                            this.addChapterEvent(primitiveEvent);
+                        }
+
                     }
                 },
                 {
@@ -318,21 +327,19 @@ download(event) {
                         1. Unique @id is generated from 'Events/' + event_counter + '/' + 'container:xor'.
                         2. XOR_TEMPLATE is appended to event list with same name 'Events/2xxxx/container:xor'.
                         3. Unique @id is added to children list of selectedElement.
-
-                        XOR_TEMPLATE:
-
-                            {
-                                '@id': '',
-                                'name': '',
-                                'comment': '',
-                                'isSchema': true,
-                                'optional': false,
-                                'children_gate': 'xor',
-                                'children': [],
-                                'outlinks': []
-
-                            },
                         */
+                       const elementData = event.target.data();
+                        this.setState({ selectedElement: elementData });
+                        const eventName = prompt('Enter XOR gate name:');
+                        if (eventName) {
+                            const xorEvent = {
+                                ...templates.xorGate,
+                                '@id': `Events/${event_counter++}/${eventName}`,
+                                'name': eventName
+                            };
+                            console.log("\n(CANVAS.JSX) Adding XOR event:\n", xorEvent);
+                            this.addChapterEvent(xorEvent);
+                        }
                     }
                 },
                 {
@@ -498,6 +505,7 @@ render() {
                 handleOpen={this.handleOpen}
                 handleSubmit={this.handleSubmit}
                 sideEditorCallback={this.props.sideEditorCallback}
+                addChapterEvent={this.props.addChapterEvent}
                 />
             </div>
         );

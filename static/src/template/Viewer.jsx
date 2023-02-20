@@ -137,6 +137,7 @@ class Viewer extends Component {
             canvas = <Canvas id="canvas"
                 elements={this.state.schemaResponse}
                 sidebarCallback={this.sidebarCallback}
+                sideEditorCallback={this.sideEditorCallback}
                 className={canvasClassName}
             />;
     

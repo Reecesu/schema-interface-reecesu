@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
-import "regenerator-runtime/runtime";
+// import "regenerator-runtime/runtime";
+import axios from "axios";
 import { isBoolean, isEmpty } from "lodash";
 import { 
   Button, 
@@ -82,31 +83,31 @@ const GraphEdit = React.forwardRef((props, ref) => {
     });
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = (e) => {
     // create data to pass up
-    const updatedData = { ...data.selectedElement };
-    delete updatedData['_label'];
-    delete updatedData['_type'];
-    delete updatedData['_shape'];
-    delete updatedData['_edge_type'];
-    delete updatedData['outlinks'];
-
-    console.log("Submitting node data: ", updatedData);
-
-    // Send the updated data to Flask app via a POST request
-    const response = await fetch('/update_json', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(updatedData)
+    const node_data = {
+      id: data.selectedElement['id'],
+      updatedFields: {},
+    };
+  
+    // loop through the selected element's fields and check which ones were updated
+    Object.entries(data.selectedElement).forEach(([key, value]) => {
+      if (key === 'id' || excluded_ids.includes(key)) return;
+      if (value !== props.selectedElement[key]) {
+        node_data.updatedFields[key] = value;
+      }
     });
-    console.log("Response from the server: ", response);
-
-    const new_data = await response.json();
-    console.log("New data: ", new_data);
-
-    // close the dialog
+  
+    console.log("The node data from handleSubmit:\n", node_data);
+    
+    // change sidebar internal id if the id is changed
+    if(e.target.id === '@id'){
+      data.selectedElement['id'] = e.target.value;
+      setData({ ...data });
+      console.log(data.selectedElement['id']);
+    }
+  
+    props.sideEditorCallback(node_data);
     handleClose();
   };
   

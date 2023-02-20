@@ -19,6 +19,8 @@ const MuiDrawer = (props) => {
 
   const toggleJsonEditor = () => {
     setShowJsonEditor(!showJsonEditor);
+    // We need to pass the schemaJson to the JsonEdit component
+
   };
 
   const handleJsonEditCallback = (json) => {

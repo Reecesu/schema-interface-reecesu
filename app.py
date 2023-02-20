@@ -341,29 +341,20 @@ def update_json(values):
     """Updates JSON with values.
 
     Parameters:
-    values (dict): contains node id, key, and value to change key to.
-    e.g. {@id: node_id, key: , new value: }
-
-
-    {'id': 'Events/10000/Container:Chapter_1', 'updatedFields': {'name': 'Chapter test', 'description': 'test', 'isSchema': 'false'}}
+    values (dict): contains node id, and updatedFields dictionary of both keys, and values to change.
+    e.g. {'id': 'node_id', 'updatedFields': {key: value, key: value, ...}}
 
     Returns:
     schemaJson (dict): new JSON 
     """
     global schema_json
-    print("\nupdate_json values\n", values)
-    # values = json.loads(request.data.decode("utf-8"))
     node_id = values['id']
-    print("\nschema_json before loops:", schema_json)
-    # print("Received Values: \n", values)
-    
-    # Find the node to update in the schema_json object
+    print("values:", values)
     node_to_update = None
     for event in schema_json['events']:
-        for node in event['children']:
-            if node == node_id:
-                node_to_update = event
-                break
+        if node_id == event["@id"]:
+            node_to_update = event
+            break
         if not node_to_update and 'entities' in event:
             for entity in event['entities']:
                 if entity['@id'] == node_id:
@@ -374,56 +365,24 @@ def update_json(values):
     
     # Update the node with the new values
     if node_to_update:
-        for key, value in values.items():
+        for key, value in values["updatedFields"].items():
             if key != 'id':
                 node_to_update[key] = value
+
+    # TODO:
+    # Edit edges:
+        # Loop through the events, look for `children`, `outlinks`, `relations` respectively
+        # edit these source-target pairs to reflect changes in edges
+    # locate the @id and then edit
+        
     
     # regenerate schema JSON, since values may have changed
     fix_participants(schema_json)
     fix_entities(schema_json)
-    print("\nschema_json from update_json:", schema_json)
+    # print("\nschema_json from update_json:", schema_json)
 
     return schema_json
 
-# def update_json():
-#     """Updates JSON with values.
-
-#     Parameters:
-#     values (dict): contains node id, key, and value to change key to.
-#     e.g. {@id: node_id, key: , new value: }
-
-#     Returns:
-#     schemaJson (dict): new JSON 
-#     """
-#     global schema_json
-#     values = json.loads(request.data.decode("utf-8"))
-#     new_json = schema_json
-#     node_id = values['id']
-#     node_type = False
-#     print("Received Values: ", values)
-#     print("node_id: ", node_id)
-#     key = values['name']
-#     new_value = values
-#     if key in ['source', 'target']:
-#         node_type = 'edge'
-#         return new_json
-#     else:
-#         node_type = node_id.split('/')[0].split(':')[-1].lower()
-#     is_root = node_id == schema_name
-
-#     # TODO how to edit relations and participants through the sidebar?
-
-#     # entities
-#     if node_type == 'entities':
-#         # entity data
-#         for entity in new_json['events']['entities']:
-#             if entity['@id'] == node_id:
-#                 entity[key] = new_value
-#         if key != '@id':
-#             schema_json = new_json
-#             return schema_json
-#         else:
-#             # relation data
 #             for relation in new_json['events']['relations']:
 #                 if relation['relationSubject'] == node_id:
 #                     relation['relationSubject'] = new_value
@@ -431,54 +390,6 @@ def update_json(values):
 #                     relation['relationObject'] = new_value
 #                 pass
 
-#     # nodes
-#     # child key
-#     if key == 'name':
-#         child_key = 'comment'
-#     elif key == '@id':
-#         child_key = 'child'
-#     else:
-#         child_key = key
-
-#     for scheme in new_json['events']:
-#         # entity id search
-#         if node_type == 'entities':
-#             if 'participants' in scheme:
-#                 for participant in scheme['participants']:
-#                     if participant['entity'] == node_id:
-#                         participant['entity'] = new_value
-#                         # if entity is blank, add 'Entities/20000/'
-#                         if participant['entity'] == '':
-#                             participant['entity'] = 'Entities/20000/'
-
-#         else:
-#             # scheme data
-#             if scheme['@id'] == node_id:
-#                 if key in scheme:
-#                     scheme[key] = new_value
-#                     if key == 'comment':
-#                         break
-#                     if key in schema_key_dict['event'] or is_root:
-#                         break
-#                 elif key in schema_key_dict['privateData'] and 'privateData' in scheme:
-#                     if key in scheme['privateData']:
-#                         scheme['privateData'][key] = new_value
-#                         break
-#             # children data
-#             if 'children' in scheme and child_key in schema_key_dict['child']:
-#                 for child in scheme['children']:
-#                     # child
-#                     if child['child'] == node_id:
-#                         child[child_key] = new_value
-#                     # child outlinks
-#                     if child_key == 'child':
-#                         for i in range(len(child['outlinks'])):
-#                             if child['outlinks'][i] == node_id:
-#                                 child['outlinks'][i] = new_value
-#             # participant data is not listed in sidebar
-
-#     schema_json = new_json
-#     return schema_json
 
 
 # not passed through here either!
@@ -541,6 +452,69 @@ def get_connected_nodes(selected_node):
 def homepage():
     return render_template('index.html')
 
+@app.route('/add_event', methods=['GET','POST'])
+def append_node():
+    """Appends a new event to the schema_json event list.
+
+    input: An already fully generated event.
+
+    Returns:
+    schemaJson (dict): updated schema_json with the input appended in the 'events' list.
+    """
+    global schema_json
+    new_event = request.get_json()
+    selected_element = request.args.get('selected_element')
+
+    print(f"new_event: {new_event}")
+    print(f"selected_element: {selected_element}")
+    print(f"schema_json: {schema_json}")
+
+    # add new event to events list in schema json
+    schema_json['events'].append(new_event)
+
+    # add new event ID to children list of selected element
+    for element in schema_json['events']:
+        if element.get('@id') == selected_element.get('@id'):
+            if 'children' not in element:
+                element['children'] = [new_event['@id']]
+            else:
+                element['children'].append(new_event['@id'])
+            break
+
+    print(f"schema_json: {schema_json}")
+    return schema_json
+
+    # # add new event ID to children list of selected element
+    # for element in schema_json['events']:
+    #     if element.get('@id') == selected_element_id:
+    #         if 'children' not in element:
+    #             element['children'] = [new_event['@id']]
+    #         else:
+    #             element['children'].append(new_event['@id'])
+    #         break
+    #     print("")
+    # return schema_json
+
+# @app.route('/add_entity', methods=['POST'])
+# def append_entity():
+#     """Appends a new entity to the correct schema_json['events']['entities] based on the event_id.
+
+#     input: An already fully generated entity.
+
+#     Returns:
+#     schemaJson (dict): updated schema_json with the updated entity list.
+#     """
+#     global schema_json
+#     new_entity = request.get_json()
+#     event_id = new_entity['event_id']
+#     for event in schema_json['events']:
+#         if event['@id'] == event_id:
+#             if 'entities' not in event:
+#                 event['entities'] = []
+#             event['entities'].append(new_entity)
+#             break
+#     return schema_json
+
 
 @app.route('/upload', methods=['POST'])
 def upload():
@@ -578,7 +552,7 @@ def get_subtree_or_update_node():
         """Posts updates to selected node and reloads schema."""
         values = json.loads(request.data.decode("utf-8"))
         new_json = update_json(values)
-        print("\nnew_json from get_subtree_or_update_node:", new_json)
+        # print("\nnew_json from get_subtree_or_update_node:", new_json)
         return json.dumps(new_json)
 
 # TODO: reload_schema not accessed
@@ -595,7 +569,7 @@ def reload_schema():
     schema_name, parsed_schema = get_connected_nodes('root')
     # print("\nschema_name from reload_schema:", schema_name)
     # print("\nparsed_schema from reload_schema:", parsed_schema)
-    print("\nschema_json from reload_schema:", schema_json)    
+    # print("\nschema_json from reload_schema:", schema_json)    
     return json.dumps({
         'parsedSchema': parsed_schema,
         'name': schema_name,

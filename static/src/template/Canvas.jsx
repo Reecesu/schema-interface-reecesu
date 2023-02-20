@@ -171,14 +171,21 @@ fitCanvas() {
 
 addChapterEvent = (chapterEvent, selectedElementId) => {
     // add new chapter event @id to children list of selectedElement
-    const selectedElement = this.state.selectedElement;
-    selectedElement.children.push(chapterEvent['@id']);
-    this.setState({ selectedElement });
+    // const selectedElement = this.state.selectedElement;
+    // selectedElement.children.push(chapterEvent['@id']);
+    // this.setState({ selectedElement });
   
     // make POST request to add the new chapter event to the schema JSON
-    axios.post(`/add_event?selected_element=${selectedElementId}`, chapterEvent)
-      .then((response) => {
-        console.log(response.data);
+    chapterEvent['parent_id'] = this.state.selectedElement;
+    axios.post(`/add_event`, chapterEvent)
+      .then((res) => {
+        console.log(res.data);
+        // if (this.state.hasSubtree && this.state.topTree.includes(node)) {
+        //     this.removeSubTree();
+        // }
+        // this.setState({ hasSubtree: true });
+        // this.cy.add(res.data);
+        // this.runLayout();
       })
       .catch((error) => {
         console.log(error);

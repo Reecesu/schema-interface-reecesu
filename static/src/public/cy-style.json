@@ -153,13 +153,6 @@
             }
         },
         {
-            "selector": "node[optional] > edge[_edge_type = 'child_outlink']",
-            "style": {
-              "line-color": "#b8b6b6",
-              "target-arrow-color": "#b8b6b6"
-            }
-        },
-        {
             "selector": "edge:selected",
             "style": {
                 "line-color": "#91a59f",

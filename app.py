@@ -504,12 +504,28 @@ def add_entity_to_event():
 
     # Remove the 'event' and 'entity' values from entity_data
     del entity_data['event']
-    del entity_data['entity']
 
     # Find the event with the given ID and add the entity to its entities list
     for event in schema_json['events']:
         if event['@id'] == event_id:
             event['entities'].append(entity_data)
+    
+    # Print the updated schema for confirmation
+    print(json.dumps(schema_json, indent=2))
+    
+    # Return a success response
+    return schema_json
+
+@app.route('/add_participant', methods=['POST'])
+def add_participant_to_event():
+    data = request.json
+    event_id = data.get('event_id')
+    participant_data = data.get('participant_data')
+
+    # Find the event with the given ID and add the participant to its participants list
+    for event in schema_json['events']:
+        if event['@id'] == event_id:
+            event['participants'].append(participant_data)
     
     # Print the updated schema for confirmation
     print(json.dumps(schema_json, indent=2))

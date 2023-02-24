@@ -374,7 +374,7 @@ download(event) {
                 {
                     id: 'add-entity',
                     content: 'Add Entity',
-                    selector: 'node[_shape = "diamond"], node[_type = "ellipse"]',
+                    selector: 'node[_shape = "diamond"], node[_shape = "ellipse"]',
                     onClickFunction: (event) => {
                       const elementData = event.target.data();
                       this.setState({ selectedElement: elementData });
@@ -480,6 +480,30 @@ download(event) {
                             },
                 
                         */
+                        const elementData = event.target.data();
+                        this.setState({ selectedElement: elementData });
+                        const participantName = prompt('Enter participant name:');
+                        const participantRoleName = prompt('Enter participant roleName:');
+                        const selectedEntity = prompt('Enter an entity:');
+                        if (participantName) {
+                          const participant = {
+                            ...templates.participant,
+                            '@id': `Participants/${participant_counter++}/${participantName}`,
+                            'roleName': participantRoleName,
+                            'entity': selectedEntity
+                          };
+                        
+                          axios.post("/add_participant", {
+                            event_id: elementData['@id'],
+                            participant_data: participant
+                          })
+                          .then(res => {
+                            console.log("Response from server: ", res.data);
+                          })
+                          .catch(err => {
+                            console.error(err);
+                          });
+                        }
                     }
                 },
                 {

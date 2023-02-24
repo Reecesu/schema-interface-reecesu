@@ -150,7 +150,7 @@ const GraphEdit = React.forwardRef((props, ref) => {
   };
 
   let i = 0;
-  const excluded_ids = ['id', '_label', '_type', '_shape', '_edge_type', 'child','participants' ,'entities' ,'relations', 'children_gate', 'key']
+  const excluded_ids = ['id', '_label', '_type', '_shape', '_edge_type', 'child','participants' ,'entities' ,'relations', 'children_gate', 'key', 'outlinks']
   const selectedElement = data.selectedElement || {};
 
   console.log("data: ", data);

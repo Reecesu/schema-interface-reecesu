@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 
 import JSONEditor from 'jsoneditor';
-import MuiDrawer from './MuiDrawer';
 import 'jsoneditor/dist/jsoneditor.min.css';
 
 export default class JSONEdit extends Component {
@@ -181,6 +180,7 @@ export default class JSONEdit extends Component {
     }
 
     componentDidUpdate() {
+        console.log('schemaJson prop in JsonEdit:', this.props.schemaJson);
         this.jsoneditor.update(this.props.schemaJson);
     }
 

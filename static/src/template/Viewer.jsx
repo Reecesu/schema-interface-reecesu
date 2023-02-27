@@ -165,7 +165,7 @@ class Viewer extends Component {
                 </div>
                 <div className="row">{schemaHeading}</div>
                 <div style={{ display: 'inline-flex' }}>
-                    {console.log("Testing from Viewer.jsx", this.state.schemaJson)}
+                    {/* {console.log("Testing from Viewer.jsx", this.state.schemaJson)} */}
                     <MuiDrawer open={this.state.isOpen} handleToggle={this.handleDrawerToggle} setShowJsonEdit={this.setShowJsonEdit} schemaJson={this.state.schemaJson} />
                     <SideEditor
                         data={this.state.nodeData}

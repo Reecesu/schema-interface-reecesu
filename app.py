@@ -367,7 +367,7 @@ def update_json(values):
     if node_to_update:
         for key, value in values["updatedFields"].items():
             if key != 'id':
-                node_to_update[key] = value
+                node_to_update[key] = (value == "true") if key in ["repeatable", "optional", "isSchema"] else value
 
     # TODO:
     # Edit edges:

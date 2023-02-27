@@ -23,7 +23,7 @@ import 'cytoscape-context-menus/cytoscape-context-menus.css';
 cytoscape.use(klay)
 cytoscape.use(contextMenus);
 
-/*   Graph view of the data.
+/*  Graph view of the data.
     Includes reload, fit to graph, and save current view button.
     Left click to expand node, right click to expand / collapse sidebar of information.
     Right click also gives a context menu to remove elements for visualization purposes. 
@@ -66,7 +66,7 @@ constructor(props) {
     this.download = this.download.bind(this);
     this.handleOpen = this.handleOpen.bind(this);
     this.graphHistory = [];
-    console.log('canvasElements:', this.state.canvasElements);
+    // console.log('canvasElements:', this.state.canvasElements);
 }
 
 showSidebar(data) {
@@ -178,8 +178,8 @@ addChapterEvent = (chapterEvent, selectedElementId) => {
       .catch((error) => {
         console.log(error);
       });
-    console.log('chapterEvent:', chapterEvent);
-    console.log('selectedElementId:', selectedElementId);
+    // console.log('chapterEvent:', chapterEvent);
+    // console.log('selectedElementId:', selectedElementId);
 };
 
 removeElementFromSchemaJson = (elementData) => {
@@ -237,12 +237,12 @@ download(event) {
                     // click node, show subtree
                 } else if (eventTarget.isNode()) {
                     let node = eventTarget.data();
-                    console.log('selectedElement (left-click):', node); // add this line
+                    // console.log('selectedElement (left-click):', node); 
                     this.showSubTree(node);
                 }
                 });
 
-            /*    We cannot use elementData here, and in the context menu because it is triggering 
+            /*  We cannot use elementData here, and in the context menu because it is triggering 
                 the GraphEdit.jsx dialog component early. We need to pass data through selectedElement state without activiating the dialog.
             */
 
@@ -264,7 +264,7 @@ download(event) {
                     classes: 'context-menu-edit',
                     onClickFunction: (event) => {
                       const elementData = event.target.data();
-                      console.log('selectedElement (right-click menu):', elementData);
+                    //   console.log('selectedElement (right-click menu):', elementData);
                       this.setState({ selectedElement: elementData });
                     },
                   },
@@ -276,7 +276,7 @@ download(event) {
                       const confirmed = window.confirm("Are you sure you want to remove this element?");
                       if (confirmed) {
                         const elementData = event.target.data();
-                        console.log("Remove object", elementData);
+                        // console.log("Remove object", elementData);
                         this.removeObject(event);
                         this.removeElementFromSchemaJson(elementData);
                       }
@@ -326,8 +326,8 @@ download(event) {
                                 '@id': `Events/${event_counter++}/${eventName}`,
                                 'name': eventName
                             };
-                            console.log("CLICK ADD CHAPTER")
-                            console.log("\n(CANVAS.JSX) Adding chapter event:\n", chapterEvent);
+                            // console.log("CLICK ADD CHAPTER")
+                            // console.log("\n(CANVAS.JSX) Adding chapter event:\n", chapterEvent);
                             this.addChapterEvent(chapterEvent);
                         }
                       }
@@ -346,7 +346,7 @@ download(event) {
                                 '@id': `Events/${event_counter++}/${eventName}`,
                                 'name': eventName
                             };
-                            console.log("\n(CANVAS.JSX) Adding primitive event:\n", primitiveEvent);
+                            // console.log("\n(CANVAS.JSX) Adding primitive event:\n", primitiveEvent);
                             this.addChapterEvent(primitiveEvent);
                         }
 
@@ -366,7 +366,7 @@ download(event) {
                                 '@id': `Events/${event_counter++}/${eventName}`,
                                 'name': eventName
                             };
-                            console.log("\n(CANVAS.JSX) Adding XOR event:\n", xorEvent);
+                            // console.log("\n(CANVAS.JSX) Adding XOR event:\n", xorEvent);
                             this.addChapterEvent(xorEvent);
                         }
                     }
@@ -526,7 +526,7 @@ componentDidUpdate(prevProps) {
     }
 
     if (this.props.selectedElement !== prevProps.selectedElement) {
-        console.log('selectedElement (componentDidUpdate):', this.props.selectedElement);
+        // console.log('selectedElement (componentDidUpdate):', this.props.selectedElement);
         if (this.props.selectedElement) {
             this.setState({ isGraphEditOpen: true });
         } else {

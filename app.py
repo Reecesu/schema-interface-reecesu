@@ -367,7 +367,7 @@ def update_json(values):
     if node_to_update:
         for key, value in values["updatedFields"].items():
             if key != 'id':
-                node_to_update[key] = value
+                node_to_update[key] = (value == "true") if key in ["repeatable", "optional", "isSchema"] else value
 
     # TODO:
     # Edit edges:
@@ -376,19 +376,10 @@ def update_json(values):
     # locate the @id and then edit
         
     
-    # regenerate schema JSON, since values may have changed
     fix_participants(schema_json)
     fix_entities(schema_json)
-    # print("\nschema_json from update_json:", schema_json)
 
     return schema_json
-
-#             for relation in new_json['events']['relations']:
-#                 if relation['relationSubject'] == node_id:
-#                     relation['relationSubject'] = new_value
-#                 if relation['relationObject'] == node_id:
-#                     relation['relationObject'] = new_value
-#                 pass
 
 
 
@@ -464,10 +455,11 @@ def append_node():
     global schema_json
     new_event = request.get_json()
     selected_element = new_event['parent_id'] #request.args.get('selected_element')
+    del new_event['parent_id']
 
-    print(f"new_event: {new_event}")
-    print(f"selected_element: {selected_element}")
-    print(f"schema_json: {schema_json}")
+    # print(f"new_event: {new_event}")
+    # print(f"selected_element: {selected_element}")
+    # print(f"schema_json: {schema_json}")
 
     # add new event to events list in schema json
     schema_json['events'].append(new_event)
@@ -481,39 +473,126 @@ def append_node():
                 element['children'].append(new_event['@id'])
             break
 
-    print(f"schema_json: {schema_json}")
+    # print(f"schema_json: {schema_json}")
     return schema_json
 
-    # # add new event ID to children list of selected element
-    # for element in schema_json['events']:
-    #     if element.get('@id') == selected_element_id:
-    #         if 'children' not in element:
-    #             element['children'] = [new_event['@id']]
-    #         else:
-    #             element['children'].append(new_event['@id'])
-    #         break
-    #     print("")
-    # return schema_json
+@app.route('/remove_node', methods=['POST'])
+def remove_node():
+  id = request.json['id']
+  for i, node in enumerate(schema_json['events']):
+    if node.get('@id') == id:
+      # remove node from schema_json
+      schema_json['events'].pop(i)
 
-# @app.route('/add_entity', methods=['POST'])
-# def append_entity():
-#     """Appends a new entity to the correct schema_json['events']['entities] based on the event_id.
+      # remove node from other nodes' outlinks and children lists
+      for j, other_node in enumerate(schema_json['events']):
+        if other_node.get('@id') != id:
+          if 'outlinks' in other_node and id in other_node['outlinks']:
+            other_node['outlinks'].remove(id)
+          if 'children' in other_node and id in other_node['children']:
+            other_node['children'].remove(id)
 
-#     input: An already fully generated entity.
+      break
 
-#     Returns:
-#     schemaJson (dict): updated schema_json with the updated entity list.
-#     """
-#     global schema_json
-#     new_entity = request.get_json()
-#     event_id = new_entity['event_id']
-#     for event in schema_json['events']:
-#         if event['@id'] == event_id:
-#             if 'entities' not in event:
-#                 event['entities'] = []
-#             event['entities'].append(new_entity)
-#             break
-#     return schema_json
+  return schema_json
+
+@app.route('/add_entity', methods=['POST'])
+def add_entity_to_event():
+    data = request.json
+    event_id = data.get('event_id')
+    entity_data = data.get('entity_data')
+
+    # Remove the 'event' and 'entity' values from entity_data
+    del entity_data['event']
+
+    # Find the event with the given ID and add the entity to its entities list
+    for event in schema_json['events']:
+        if event['@id'] == event_id:
+            event['entities'].append(entity_data)
+    
+    # Print the updated schema for confirmation
+    print(json.dumps(schema_json, indent=2))
+    
+    # Return a success response
+    return schema_json
+
+@app.route('/add_participant', methods=['POST'])
+def add_participant_to_event():
+    data = request.json
+    event_id = data.get('event_id')
+    participant_data = data.get('participant_data')
+
+    # Find the event with the given ID and add the participant to its participants list
+    for event in schema_json['events']:
+        if event['@id'] == event_id:
+            event['participants'].append(participant_data)
+    
+    # Print the updated schema for confirmation
+    print(json.dumps(schema_json, indent=2))
+    
+    # Return a success response
+    return schema_json
+
+@app.route('/add_outlink', methods=['POST'])
+def add_outlink():
+    global schema_json
+    data = request.get_json()
+    from_node_id = data.get('fromNodeId')
+    to_node_id = data.get('toNodeId')
+    print(f"from_node_id: {from_node_id}")
+    print(f"to_node_id: {to_node_id}")
+
+    # Find the event with the matching @id field
+    for event in schema_json['events']:
+        if event.get('@id') == from_node_id:
+            # Modify outlinks in the original dictionary
+            if 'outlinks' not in event:
+                event['outlinks'] = [to_node_id]
+            else:
+                event['outlinks'].append(to_node_id)
+            break
+
+    # get the updated nodes and edges
+    global nodes
+    global edges
+    nodes, edges = get_nodes_and_edges(schema_json)
+    schema_name, parsed_schema = get_connected_nodes('root')
+
+    # return the updated parsedSchema and schemaJson
+    return json.dumps({
+        'parsedSchema': parsed_schema,
+        'name': schema_name,
+        'schemaJson': schema_json
+    })
+
+@app.route('/add_relation', methods=['POST'])
+def add_relation():
+    global schema_json
+    data = request.get_json()
+    from_node_id = data.get('fromNodeId')
+    to_node_id = data.get('toNodeId')
+    relation = data.get('relation')
+
+    print(f"from_node_id: {from_node_id}")
+    print(f"to_node_id: {to_node_id}")
+    print(f"relation: {relation}")
+
+    # Find the event which contains the relationSubject entity
+    for event in schema_json['events']:
+        if event.get('@id') == from_node_id:
+            if 'relations' not in event:
+                event['relations'] = [relation]
+            else:
+                event['relations'].append(relation)
+    
+    nodes, edges = get_nodes_and_edges(schema_json)
+    schema_name, parsed_schema = get_connected_nodes('root')
+    
+    return json.dumps({
+        'parsedSchema': parsed_schema,
+        'name': schema_name,
+        'schemaJson': schema_json
+    })
 
 
 @app.route('/upload', methods=['POST'])

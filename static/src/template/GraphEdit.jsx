@@ -17,7 +17,7 @@ const GraphEdit = React.forwardRef((props, ref) => {
   const initData = {
     selectedElement: props.selectedElement,
   };
-  console.log("props.selectedElement: ", props.selectedElement);
+  // console.log("props.selectedElement: ", props.selectedElement);
 
   const [data, setData] = useState(initData);
   const [edit, setEdit] = useState("");
@@ -109,13 +109,13 @@ const GraphEdit = React.forwardRef((props, ref) => {
       }
     });
   
-    console.log("\n(GRAPHEDIT.JSX) The node data from handleSubmit:\n", node_data);
+    // console.log("\n(GRAPHEDIT.JSX) The node data from handleSubmit:\n", node_data);
   
     // change sidebar internal id if the id is changed
     if (e.target.id === '@id') {
       data.selectedElement['id'] = e.target.value;
       setData({ ...data });
-      console.log("(GRAPHEDIT.JSX) Selected element id updated to:", data.selectedElement['id']);
+      // console.log("(GRAPHEDIT.JSX) Selected element id updated to:", data.selectedElement['id']);
     }
   
     // Determine which action to take based on the props
@@ -127,7 +127,7 @@ const GraphEdit = React.forwardRef((props, ref) => {
   
       // Update the events list in the schema JSON with the new chapter event
       if (node_data.updatedFields.name) {
-        console.log("(GRAPHEDIT.JSX) Sending chapter event to server:", data.selectedElement);
+        // console.log("(GRAPHEDIT.JSX) Sending chapter event to server:", data.selectedElement);
         axios.post("/add_event", data.selectedElement)
           .then(res => {
             console.log("Response from server: ", res.data);
@@ -144,20 +144,20 @@ const GraphEdit = React.forwardRef((props, ref) => {
   
   const handleClose = () => {
     // close the dialog
-    console.log("Closing dialog");
-    console.log("Type of onClose: ", typeof props.onClose);
+    // console.log("Closing dialog");
+    // console.log("Type of onClose: ", typeof props.onClose);
     setOpen(false);
   };
 
   let i = 0;
-  const excluded_ids = ['id', '_label', '_type', '_shape', '_edge_type', 'child','participants' ,'entities' ,'relations', 'children_gate', 'key']
+  const excluded_ids = ['id', '_label', '_type', '_shape', '_edge_type', 'child','participants' ,'entities' ,'relations', 'children_gate', 'key', 'outlinks']
   const selectedElement = data.selectedElement || {};
 
-  console.log("data: ", data);
-  console.log("selectedElement: ", selectedElement);
-  console.log("edit: ", edit);
-  console.log("open: ", open);
-  console.log("refFocus: ", refFocus);
+  // console.log("data: ", data);
+  // console.log("selectedElement: ", selectedElement);
+  // console.log("edit: ", edit);
+  // console.log("open: ", open);
+  // console.log("refFocus: ", refFocus);
 
   return (
     <Dialog open={open} onClose={handleClose} ref={ref} maxWidth={false}>
@@ -194,8 +194,8 @@ const GraphEdit = React.forwardRef((props, ref) => {
                   <option key={index} value={item}>{item}</option>
                 )) : isBoolean(val) ? (
                   <>
-                    <option value="true">true</option>
-                    <option value="false">false</option>
+                    <option value={true}>true</option>
+                    <option value={false}>false</option>
                   </>
                 ) : null}
               </TextField>

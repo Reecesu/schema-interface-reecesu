@@ -23,7 +23,7 @@ import 'cytoscape-context-menus/cytoscape-context-menus.css';
 cytoscape.use(klay)
 cytoscape.use(contextMenus);
 
-/*   Graph view of the data.
+/*  Graph view of the data.
     Includes reload, fit to graph, and save current view button.
     Left click to expand node, right click to expand / collapse sidebar of information.
     Right click also gives a context menu to remove elements for visualization purposes. 
@@ -66,7 +66,7 @@ constructor(props) {
     this.download = this.download.bind(this);
     this.handleOpen = this.handleOpen.bind(this);
     this.graphHistory = [];
-    console.log('canvasElements:', this.state.canvasElements);
+    // console.log('canvasElements:', this.state.canvasElements);
 }
 
 showSidebar(data) {
@@ -170,29 +170,49 @@ fitCanvas() {
 }
 
 addChapterEvent = (chapterEvent, selectedElementId) => {
-    // add new chapter event @id to children list of selectedElement
-    // const selectedElement = this.state.selectedElement;
-    // selectedElement.children.push(chapterEvent['@id']);
-    // this.setState({ selectedElement });
-  
-    // make POST request to add the new chapter event to the schema JSON
     chapterEvent['parent_id'] = this.state.selectedElement;
     axios.post(`/add_event`, chapterEvent)
       .then((res) => {
         console.log(res.data);
-        // if (this.state.hasSubtree && this.state.topTree.includes(node)) {
-        //     this.removeSubTree();
-        // }
-        // this.setState({ hasSubtree: true });
-        // this.cy.add(res.data);
-        // this.runLayout();
       })
       .catch((error) => {
         console.log(error);
       });
-    console.log('chapterEvent:', chapterEvent);
-    console.log('selectedElementId:', selectedElementId);
+    // console.log('chapterEvent:', chapterEvent);
+    // console.log('selectedElementId:', selectedElementId);
+};
+
+removeElementFromSchemaJson = (elementData) => {
+    axios.post('/remove_node', {
+        id: elementData['@id']
+    }).then((res) => {
+        console.log(res.data);
+    }).catch((error) => {
+        console.log(error);
+    });
+};
+
+addOutlink = (fromNodeId, toNodeId) => {
+    axios.post('/add_outlink', {
+      fromNodeId: fromNodeId,
+      toNodeId: toNodeId,
+    })
+      .then((response) => {
+        console.log(response);
+        // Add the new edge to the graph
+        this.cy.add({
+          data: {
+            id: `${fromNodeId}-${toNodeId}`,
+            source: fromNodeId,
+            target: toNodeId,
+          },
+        });
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   };
+
 
 download(event) {
     event.preventDefault();
@@ -217,12 +237,12 @@ download(event) {
                     // click node, show subtree
                 } else if (eventTarget.isNode()) {
                     let node = eventTarget.data();
-                    console.log('selectedElement (left-click):', node); // add this line
+                    // console.log('selectedElement (left-click):', node); 
                     this.showSubTree(node);
                 }
                 });
 
-            /*    We cannot use elementData here, and in the context menu because it is triggering 
+            /*  We cannot use elementData here, and in the context menu because it is triggering 
                 the GraphEdit.jsx dialog component early. We need to pass data through selectedElement state without activiating the dialog.
             */
 
@@ -242,48 +262,61 @@ download(event) {
                     content: 'Edit',
                     selector: 'node, edge',
                     classes: 'context-menu-edit',
-                    onClickFunction: event => {
-                        const elementData = event.target.data();
-                        console.log('selectedElement (right-click menu):', elementData);
-                        this.setState({ selectedElement: elementData });
-                        this.setState({ isGraphEditOpen: true });
-                    },
-                },
-                {
-                    id: 'remove',
-                    content: 'Remove',
-                    selector: 'node, edge',
                     onClickFunction: (event) => {
-                        this.removeObject(event);
-
-                        /**                         
-                        TODO:
-                        1. Remove selectedElement from JSON event list.
-                        2. Remove mention of selectedElement from outlinks list of all other events.
-                        3. Remove mention of selectedElement from children list of all other events.
-                        4. f the selectedElement had items in it's children list, those items should be added the children list of selectedElement's parent node.
-                         */
-
+                      const elementData = event.target.data();
+                    //   console.log('selectedElement (right-click menu):', elementData);
+                      this.setState({ selectedElement: elementData });
                     },
-                },
+                  },
+                {
+                    id: "remove",
+                    content: "Remove",
+                    selector: "node, edge",
+                    onClickFunction: (event) => {
+                      const confirmed = window.confirm("Are you sure you want to remove this element?");
+                      if (confirmed) {
+                        const elementData = event.target.data();
+                        // console.log("Remove object", elementData);
+                        this.removeObject(event);
+                        this.removeElementFromSchemaJson(elementData);
+                      }
+                    },
+                  },
                 {
                     id: 'add-outlink',
                     content: 'Add Outlink',
                     selector: 'node[_shape = "diamond"], node[_shape = "ellipse"]',
                     onClickFunction: (event) => {
-                        /**
-                        1. Display list of all available nodes.
-                        2. Selected node @id is added to outlinks list of selectedElement.
-                         */
-                    },
-                },
+                        // Set the selected node ID to the ID of the node that was right-clicked.
+                        this.setState({ selectedNodeId: event.target.id() });
+                      
+                        // Wait for the user's next click of a node.
+                        this.cy.one('select', 'node', (event) => {
+                          const selectedNode = event.target;
+                          const selectedNodeId = selectedNode.id();
+                      
+                          // Add the selected node to the outlinks list of the first selected node.
+                          this.addOutlink(this.state.selectedNodeId, selectedNodeId);
+                      
+                          // Make the backend call to add the outlink.
+                          axios.post('/add_outlink', {
+                            fromNodeId: this.state.selectedNodeId,
+                            toNodeId: selectedNodeId,
+                          })
+                            .then((response) => {
+                              console.log(response);
+                            })
+                            .catch((error) => {
+                              console.error(error);
+                            });
+                        });
+                      },
+                  },
                 {
                     id: 'add-chapter-event',
                     content: 'Add Chapter Event',
                     selector: 'node[_shape = "diamond"], node[_type = "gate"]',
                     onClickFunction: (event) => {
-                        event.preventDefault();
-                      
                         const elementData = event.target.data();
                         this.setState({ selectedElement: elementData });
                         const eventName = prompt('Enter chapter event name:');
@@ -293,7 +326,8 @@ download(event) {
                                 '@id': `Events/${event_counter++}/${eventName}`,
                                 'name': eventName
                             };
-                            console.log("\n(CANVAS.JSX) Adding chapter event:\n", chapterEvent);
+                            // console.log("CLICK ADD CHAPTER")
+                            // console.log("\n(CANVAS.JSX) Adding chapter event:\n", chapterEvent);
                             this.addChapterEvent(chapterEvent);
                         }
                       }
@@ -303,13 +337,6 @@ download(event) {
                     content: 'Add Primitive Event',
                     selector: 'node[_shape = "diamond"], node[_type = "gate"]',
                     onClickFunction: (event) => {
-                        event.preventDefault();
-                        /**
-                        1. Dialog prompt user to input primitive event 'name'.
-                        2. Unique @id is generated from 'Events/' + event_counter + '/' + 'name'.
-                        3. PRIMITIVE_TEMPLATE is appended to event list with unique @id, and name.
-                        4. Add new primitive event @id to children list of selectedElement.
-                        */
                        const elementData = event.target.data();
                         this.setState({ selectedElement: elementData });
                         const eventName = prompt('Enter primitive event name:');
@@ -319,7 +346,7 @@ download(event) {
                                 '@id': `Events/${event_counter++}/${eventName}`,
                                 'name': eventName
                             };
-                            console.log("\n(CANVAS.JSX) Adding primitive event:\n", primitiveEvent);
+                            // console.log("\n(CANVAS.JSX) Adding primitive event:\n", primitiveEvent);
                             this.addChapterEvent(primitiveEvent);
                         }
 
@@ -330,11 +357,6 @@ download(event) {
                     content: 'Add XOR Gate',
                     selector: 'node[_shape = "diamond"], node[_type = "ellipse"]',
                     onClickFunction: (event) => {
-                        /**
-                        1. Unique @id is generated from 'Events/' + event_counter + '/' + 'container:xor'.
-                        2. XOR_TEMPLATE is appended to event list with same name 'Events/2xxxx/container:xor'.
-                        3. Unique @id is added to children list of selectedElement.
-                        */
                        const elementData = event.target.data();
                         this.setState({ selectedElement: elementData });
                         const eventName = prompt('Enter XOR gate name:');
@@ -344,7 +366,7 @@ download(event) {
                                 '@id': `Events/${event_counter++}/${eventName}`,
                                 'name': eventName
                             };
-                            console.log("\n(CANVAS.JSX) Adding XOR event:\n", xorEvent);
+                            // console.log("\n(CANVAS.JSX) Adding XOR event:\n", xorEvent);
                             this.addChapterEvent(xorEvent);
                         }
                     }
@@ -352,28 +374,37 @@ download(event) {
                 {
                     id: 'add-entity',
                     content: 'Add Entity',
-                    selector: 'node[_shape = "diamond"], node[_type = "ellipse"]',
+                    selector: 'node[_shape = "diamond"], node[_shape = "ellipse"]',
                     onClickFunction: (event) => {
-                        /**
-                        1. TextField appears.
-                        2. User inputs name, wd_node, wd_label, and wd_description (all but name can be blank).
-                        3. Unique @id is generated from 'Entities/' + entity_counter + '/' + 'name' (Entities/2xxxx/name).
-                        4. Append ENTITY_TEMPLATE to selectedElement entity list with same 'name' and @id 'Entities/xxxxx/name'.
-
-                        NOTE: entity_counter is a global variable that is incremented every time an entity is added.
-                                entites can be edited and removed from 'view-entites' menuItem on container and primitive events
-
-                        ENTITY_TEMPLATE:
-
-                            {
-                                "@id": "",
-                                "name": "",
-                                "wd_node": "",
-                                "wd_label": "",
-                                "wd_description": ""
-                            },
-                        */
-                    },
+                      const elementData = event.target.data();
+                      this.setState({ selectedElement: elementData });
+                      const entityName = prompt('Enter entity name:');
+                      const entityWdNode = prompt('Enter entity wd_node:');
+                      const entityWdLabel = prompt('Enter entity wd_label:');
+                      const entityWdDescription = prompt('Enter entity wd_description:');
+                      if (entityName) {
+                        const entity = {
+                          ...templates.entity,
+                          '@id': `Entities/${entity_counter++}/${entityName}`,
+                          'name': entityName,
+                          'wd_node': entityWdNode,
+                          'wd_label': entityWdLabel,
+                          'wd_description': entityWdDescription,
+                          'event': elementData['@id']
+                        };
+                      
+                        axios.post("/add_entity", {
+                          event_id: elementData['@id'],
+                          entity_data: entity
+                        })
+                        .then(res => {
+                          console.log("Response from server: ", res.data);
+                        })
+                        .catch(err => {
+                          console.error(err);
+                        });
+                      }
+                    }
                 },
                 {
                     id: 'view-entities',
@@ -391,29 +422,41 @@ download(event) {
                     content: 'Add Relation',
                     selector: 'node[_type = "entity"]',
                     onClickFunction: (event) => {
-                        /** 
-                        1. System waits for user to select another entity node.
-                        2. Get second selectedElements @id.
-                        3. Dialog appears with six textfields.
-                        4. "relationSubject" populated with first selectedElement @id.
-                        5. "relationObject" populated with second selectedElement @id.
-                        6. 'name' is only other required field.
-                        7. Relation @id is generated from 'Relations/' + relation_counter + '/' + 'name'.
-                             NOTE: wd_node, wd_label, and wd_description can be filled in with edit if at first missing.
-                        8. RELATION_TEMPLATE is appended to selectedElement relation list with same name 'Relations/xxxxx/name'.
+                            this.setState({ selectedNodeId: event.target.id() });
+                          
+                            // Wait for the user's next click of a node.
+                            this.cy.one('select', 'node', (event) => {
+                                const selectedNode = event.target;
+                                const selectedNodeId = selectedNode.id();
+                                const name = prompt('Enter relation name:');
+                                const wd_node = prompt('Enter WikiData node:');
+                                const wd_label = prompt('Enter WikiData label:');
+                                const wd_description = prompt('Enter WikiData description:');
 
-                        RELATION_TEMPLATE:
-
-                            {
-                                "@id": "",
-                                "name": "",
-                                "relationSubject": "",
-                                "relationObject": "",
-                                "wd_node": "",
-                                "wd_label": "",
-                                "wd_description": ""
-                            },
-                        */
+                                const relation = {
+                                    ...templates.relation,
+                                    '@id': `Relations/${relation_counter++}/${name}`,
+                                    'name': name,
+                                    'relationSubject': this.state.selectedNodeId,
+                                    'relationObject': selectedNodeId,
+                                    'wd_node': wd_node,
+                                    'wd_label': wd_label,
+                                    'wd_description': wd_description
+                                };
+                          
+                              // Make the backend call to add the outlink.
+                              axios.post('/add_relation', {
+                                fromNodeId: this.state.selectedNodeId,
+                                toNodeId: selectedNodeId,
+                                relation: relation
+                              })
+                                .then((response) => {
+                                  console.log(response);
+                                })
+                                .catch((error) => {
+                                  console.error(error);
+                            });
+                        });
                     }
                 },
                 {
@@ -437,6 +480,30 @@ download(event) {
                             },
                 
                         */
+                        const elementData = event.target.data();
+                        this.setState({ selectedElement: elementData });
+                        const participantName = prompt('Enter participant name:');
+                        const participantRoleName = prompt('Enter participant roleName:');
+                        const selectedEntity = prompt('Enter an entity:');
+                        if (participantName) {
+                          const participant = {
+                            ...templates.participant,
+                            '@id': `Participants/${participant_counter++}/${participantName}`,
+                            'roleName': participantRoleName,
+                            'entity': selectedEntity
+                          };
+                        
+                          axios.post("/add_participant", {
+                            event_id: elementData['@id'],
+                            participant_data: participant
+                          })
+                          .then(res => {
+                            console.log("Response from server: ", res.data);
+                          })
+                          .catch(err => {
+                            console.error(err);
+                          });
+                        }
                     }
                 },
                 {
@@ -459,7 +526,7 @@ componentDidUpdate(prevProps) {
     }
 
     if (this.props.selectedElement !== prevProps.selectedElement) {
-        console.log('selectedElement (componentDidUpdate):', this.props.selectedElement);
+        // console.log('selectedElement (componentDidUpdate):', this.props.selectedElement);
         if (this.props.selectedElement) {
             this.setState({ isGraphEditOpen: true });
         } else {

@@ -61,7 +61,7 @@ function SideEditor(props) {
         if(e.target.id === '@id'){
             data.propData['id'] = e.target.value;
             setData({ ...data });
-            console.log(data.propData['id']);
+            // console.log(data.propData['id']);
         }
         // pass data up if it was edited
         if(edit !== ''){

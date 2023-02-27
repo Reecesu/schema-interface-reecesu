@@ -150,7 +150,7 @@ const GraphEdit = React.forwardRef((props, ref) => {
   };
 
   let i = 0;
-  const excluded_ids = ['id', '_label', '_type', '_shape', '_edge_type', 'child','participants' ,'entities' ,'relations', 'children_gate', 'key', 'outlinks']
+  const excluded_ids = ['id', '_label', '_type', '_shape', '_edge_type', 'child','participants' , 'relations', 'children_gate', 'key', 'outlinks', 'modality']
   const selectedElement = data.selectedElement || {};
 
   // console.log("data: ", data);
@@ -167,40 +167,40 @@ const GraphEdit = React.forwardRef((props, ref) => {
           ""
         ) : (
           <DialogContentText>
-            Edit the properties of {data.selectedElement?._type}.
+            Edit the properties of {data.selectedElement?.["_label"]}.
           </DialogContentText>
         )}
         <form noValidate autoComplete="off">
-          {data.selectedElement && Object.entries(data.selectedElement).map(([key, val]) => (
-            !excluded_ids.includes(key) && (
-              <TextField
-                key={key}
-                fullWidth
-                margin="dense"
-                id={key}
-                label={key}
-                name={key}
-                value={val}
-                onChange={handleChange}
-                onBlur={() => handleEdit(key, edit)}
-                inputRef={key === 'name' ? refFocus : null}
-                multiline={Array.isArray(val) || isBoolean(val)}
-                select={isBoolean(val)}
-                SelectProps={isBoolean(val) ? {
-                  native: true
-                } : undefined}
-              >
-                {Array.isArray(val) ? val.map((item, index) => (
-                  <option key={index} value={item}>{item}</option>
-                )) : isBoolean(val) ? (
-                  <>
-                    <option value={true}>true</option>
-                    <option value={false}>false</option>
-                  </>
-                ) : null}
-              </TextField>
-            )
-          ))}
+        {data.selectedElement && Object.entries(data.selectedElement).map(([key, val]) => (
+          !excluded_ids.includes(key) && (
+            <TextField
+              key={key}
+              fullWidth
+              margin="dense"
+              id={key}
+              label={key}
+              name={key}
+              value={(Array.isArray(val) && key !== "wd_node" && key !== "children") ? val.map(v => v["@id"]).join(", ") : val}
+              onChange={handleChange}
+              onBlur={() => handleEdit(key, edit)}
+              inputRef={key === 'name' ? refFocus : null}
+              multiline={Array.isArray(val) || isBoolean(val)}
+              select={isBoolean(val)}
+              SelectProps={isBoolean(val) ? {
+                native: true
+              } : undefined}
+            >
+              {(Array.isArray(val) && key !== "wd_node" && key !== "children") ? val.map((item, index) => (
+                <option key={index} value={item["@id"]}>{item["@id"]}</option>
+              )) : isBoolean(val) ? (
+                <>
+                  <option value={true}>true</option>
+                  <option value={false}>false</option>
+                </>
+              ) : null}
+            </TextField>
+          )
+        ))}
         </form>
       </DialogContent>
       <DialogActions>

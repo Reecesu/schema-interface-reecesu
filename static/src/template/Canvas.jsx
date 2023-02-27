@@ -1,5 +1,6 @@
 import React from 'react';
 import CytoscapeComponent from 'react-cytoscapejs';
+import Dialog from '@mui/material/Dialog';
 import templates from './templates';
 import cytoscape from 'cytoscape';
 import klay from 'cytoscape-klay';
@@ -45,7 +46,8 @@ constructor(props) {
         downloadUrl: '',
         fileName: 'graph.png',
         selectedElement: null,
-        isGraphEditOpen: false
+        isGraphEditOpen: false,
+        allEntities: [],
     };
 
     // create topTree
@@ -105,6 +107,20 @@ showSubTree(node) {
 removeSubTree() {
     this.reloadCanvas();
     this.setState({ hasSubtree: false });
+}
+
+fetchAllEntities = () => {
+    axios.get('/get_all_entities')
+      .then((response) => {
+        this.setState({ allEntities: response.data });
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+}
+
+  handleDialogClose = () => {
+    this.setState({ dialogOpen: false });
 }
 
 runLayout() {
@@ -268,20 +284,22 @@ download(event) {
                       this.setState({ selectedElement: elementData });
                     },
                   },
-                {
+                  {
                     id: "remove",
                     content: "Remove",
                     selector: "node, edge",
                     onClickFunction: (event) => {
-                      const confirmed = window.confirm("Are you sure you want to remove this element?");
-                      if (confirmed) {
-                        const elementData = event.target.data();
-                        // console.log("Remove object", elementData);
-                        this.removeObject(event);
-                        this.removeElementFromSchemaJson(elementData);
-                      }
+                        const confirmed = window.confirm("Are you sure you want to remove this element?");
+                        if (confirmed) {
+                            const elementData = event.target.data();
+                            const elementId = elementData['@id'];
+                            const elementType = event.target.isNode() ? 'node' : 'edge';
+                            // console.log("Remove object", elementData);
+                            this.removeObject(event);
+                            this.removeElementFromSchemaJson(elementId, elementType);
+                        }
                     },
-                  },
+                },
                 {
                     id: 'add-outlink',
                     content: 'Add Outlink',
@@ -409,14 +427,44 @@ download(event) {
                 {
                     id: 'view-entities',
                     content: 'View Entities',
-                    selector: 'node[_shape = "diamond"], node[_type = "ellipse"]',
+                    selector: 'node[_shape = "diamond"], node[_shape = "ellipse"]',
                     onClickFunction: (event) => {
-                        /**
-                        1. Entities list is displayed on a table.
-                        2. User can 'edit' or 'remove' entities from the list.
-                        */
+                      axios.get('/get_all_entities')
+                        .then((response) => {
+                          const allEntities = response.data;
+                          console.log(allEntities);
+                  
+                          const dialogContent = (
+                            <div>
+                              <h2>Global Entity list</h2>
+                              <table style={{ borderCollapse: 'collapse', width: '100%', margin: '1em' }}>
+                                <thead>
+                                  <tr style={{ borderBottom: '1px solid black' }}>
+                                    <th style={{ padding: '0.5em' }}>Entity Name</th>
+                                    <th style={{ padding: '0.5em' }}>Entity ID</th>
+                                    <th style={{ padding: '0.5em' }}>Entity Label</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {allEntities.map((entity) => (
+                                    <tr key={entity['@id']} style={{ borderBottom: '1px solid black' }}>
+                                      <td style={{ padding: '0.5em' }}>{entity['name']}</td>
+                                      <td style={{ padding: '0.5em' }}>{entity['@id']}</td>
+                                      <td style={{ padding: '0.5em' }}>{entity['wd_label']}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          );
+                  
+                          this.setState({ dialogOpen: true, dialogContent: dialogContent });
+                        })
+                        .catch((error) => {
+                          console.error(error);
+                        });
                     },
-                },
+                  },
                 {
                     id: 'add-relation',
                     content: 'Add Relation',
@@ -562,6 +610,9 @@ render() {
                 cy={(cy) => { this.cy = cy }}
                 maxZoom={2} minZoom={0.87}
             />
+            <Dialog open={this.state.dialogOpen} onClose={this.handleDialogClose}>
+                {this.state.dialogContent}
+            </Dialog>
             <div style={buttonContainer}>
                 <RefreshIcon type='button' color="action" fontSize='large' onClick={this.reloadCanvas} />
                 <AspectRatioIcon type='button' color="action" fontSize='large' onClick={this.fitCanvas} />

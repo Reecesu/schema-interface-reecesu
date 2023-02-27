@@ -476,25 +476,44 @@ def append_node():
     # print(f"schema_json: {schema_json}")
     return schema_json
 
-@app.route('/remove_node', methods=['POST'])
-def remove_node():
-  id = request.json['id']
-  for i, node in enumerate(schema_json['events']):
-    if node.get('@id') == id:
-      # remove node from schema_json
-      schema_json['events'].pop(i)
+@app.route('/remove_element', methods=['POST'])
+def remove_element():
+    id = request.json['id']
+    element_type = request.json['type']  # 'node' or 'edge'
+    
+    if element_type == 'node':
+        for i, node in enumerate(schema_json['events']):
+            if node.get('@id') == id:
+                # remove node from schema_json
+                schema_json['events'].pop(i)
 
-      # remove node from other nodes' outlinks and children lists
-      for j, other_node in enumerate(schema_json['events']):
-        if other_node.get('@id') != id:
-          if 'outlinks' in other_node and id in other_node['outlinks']:
-            other_node['outlinks'].remove(id)
-          if 'children' in other_node and id in other_node['children']:
-            other_node['children'].remove(id)
+                # remove node from other nodes' outlinks and children lists
+                for j, other_node in enumerate(schema_json['events']):
+                    if other_node.get('@id') != id:
+                        if 'outlinks' in other_node and id in other_node['outlinks']:
+                            other_node['outlinks'].remove(id)
+                        if 'children' in other_node and id in other_node['children']:
+                            other_node['children'].remove(id)
 
-      break
+                break
+    elif element_type == 'edge':
+        for i, edge in enumerate(schema_json['relations']):
+            if edge.get('@id') == id:
+                # remove edge from schema_json
+                schema_json['relations'].pop(i)
 
-  return schema_json
+                # remove edge from the source and target nodes' inlinks and outlinks lists
+                source_id = edge.get('relationSubject')
+                target_id = edge.get('relationObject')
+                for node in schema_json['events']:
+                    if node.get('@id') == source_id and 'outlinks' in node and target_id in node['outlinks']:
+                        node['outlinks'].remove(target_id)
+                    if node.get('@id') == target_id and 'inlinks' in node and source_id in node['inlinks']:
+                        node['inlinks'].remove(source_id)
+
+                break
+    
+    return schema_json
 
 @app.route('/add_entity', methods=['POST'])
 def add_entity_to_event():
@@ -504,6 +523,7 @@ def add_entity_to_event():
 
     # Remove the 'event' and 'entity' values from entity_data
     del entity_data['event']
+    print('entity_data', entity_data)
 
     # Find the event with the given ID and add the entity to its entities list
     for event in schema_json['events']:
@@ -579,11 +599,13 @@ def add_relation():
 
     # Find the event which contains the relationSubject entity
     for event in schema_json['events']:
-        if event.get('@id') == from_node_id:
-            if 'relations' not in event:
-                event['relations'] = [relation]
-            else:
-                event['relations'].append(relation)
+        for entity in event.get('entities', []):
+            if entity.get('@id') == from_node_id:
+                if 'relations' not in event:
+                    event['relations'] = [relation]
+                else:
+                    event['relations'].append(relation)
+                break
     
     nodes, edges = get_nodes_and_edges(schema_json)
     schema_name, parsed_schema = get_connected_nodes('root')
@@ -594,6 +616,13 @@ def add_relation():
         'schemaJson': schema_json
     })
 
+@app.route('/get_all_entities', methods=['GET'])
+def get_all_entities():
+    entities = []
+    for event in schema_json['events']:
+        for entity in event.get('entities', []):
+            entities.append(entity)
+    return jsonify(entities)
 
 @app.route('/upload', methods=['POST'])
 def upload():

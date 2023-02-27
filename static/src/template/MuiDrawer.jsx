@@ -15,29 +15,20 @@ const MuiDrawer = (props) => {
     justifyContent: 'flex-start'
   });
 
-  const [showJsonEditor, setShowJsonEditor] = React.useState(false);
-
-  const toggleJsonEditor = () => {
-    setShowJsonEditor(!showJsonEditor);
-    // We need to pass the schemaJson to the JsonEdit component
-
-  };
-
   const handleJsonEditCallback = (json) => {
     console.log('JSON passed to MuiDrawer:', json);
   };
 
+  // render JsonEdit directly
   return (
     <Drawer open={props.open} onClose={props.handleToggle} anchor="right">
       <Container p={2}>
         <Typography variant="h6">
-          Menu
+          JSON Editor
         </Typography>
         <Divider />
-        <Box display="flex" flexDirection="column" justifyContent="flex-start">
-          <Button onClick={toggleJsonEditor}>Json Editor</Button>
-          {showJsonEditor && <JsonEdit parentCallback={handleJsonEditCallback} schemaJson={props.schemaJson}/>}
-          <Button>Grounding Tool</Button>
+        <Box display="flex" flexDirection="column" justifyContent="flex-start" marginTop="20px">
+           <JsonEdit parentCallback={handleJsonEditCallback} schemaJson={props.schemaJson}/>
         </Box>
       </Container>
     </Drawer>

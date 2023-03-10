@@ -11,6 +11,17 @@ a {
   .menu a:hover {
     color: #c0dbff;
   }
+
+  .my-editor {
+    width: 700px;
+    /* height: 400px; */
+    display: flex;
+  }
+
+  .vanilla-jsoneditor-react {
+    display: flex;
+    flex: 1;
+  }
   
   .Index {
     text-align: center;

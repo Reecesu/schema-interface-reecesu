@@ -227,7 +227,32 @@ addOutlink = (fromNodeId, toNodeId) => {
       .catch((error) => {
         console.error(error);
       });
-  };
+};
+
+removeEntityFromSchemaJson(entityId) {
+    let schemaJson = { ...this.state.schemaJson };
+    const events = schemaJson.events;
+  
+    // Remove entity from participants list in all events
+    events.forEach((event) => {
+      const participants = event.participants;
+      if (participants) {
+        event.participants = participants.filter(
+          (participant) => participant.entity !== entityId
+        );
+      }
+    });
+  
+    // Remove entity from entities list
+    const entities = schemaJson.events.entities;
+    if (entities) {
+      schemaJson.events.entities = entities.filter(
+        (entity) => entity['@id'] !== entityId
+      );
+    }
+  
+    return schemaJson;
+  }
 
 
 download(event) {
@@ -281,28 +306,36 @@ download(event) {
                     onClickFunction: (event) => {
                       const elementData = event.target.data();
                     //   console.log('selectedElement (right-click menu):', elementData);
-                      this.setState({ selectedElement: elementData });
+                      this.setState({dialogOpen: false, selectedElement: elementData });
                     },
                   },
                   {
                     id: "remove",
                     content: "Remove",
-                    selector: "node, edge",
+                    selector: "node",
                     onClickFunction: (event) => {
-                        const confirmed = window.confirm("Are you sure you want to remove this element?");
-                        if (confirmed) {
-                            const elementData = event.target.data();
-                            const elementId = elementData['@id'];
-                            const elementType = event.target.isNode() ? 'node' : 'edge';
-                            // console.log("Remove object", elementData);
-                            this.removeObject(event);
-                            this.removeElementFromSchemaJson(elementId, elementType);
-                        }
+                      const confirmed = window.confirm("Are you sure you want to remove this element?");
+                      if (confirmed) {
+                        const elementData = event.target.data();
+                        const elementId = elementData['@id'];
+                        const elementType = event.target.isNode() ? 'node' : 'edge';
+                        axios.post('/remove_element', {
+                          id: elementId,
+                          type: elementType
+                        })
+                        .then((response) => {
+                          console.log(response);
+                        })
+                        .catch((error) => {
+                          console.error(error);
+                        });
+                      }
                     },
-                },
+                    hasTrailingDivider: true
+                  },
                 {
                     id: 'add-outlink',
-                    content: 'Add Outlink',
+                    content: 'Outlink',
                     selector: 'node[_shape = "diamond"], node[_shape = "ellipse"]',
                     onClickFunction: (event) => {
                         // Set the selected node ID to the ID of the node that was right-clicked.
@@ -328,7 +361,8 @@ download(event) {
                               console.error(error);
                             });
                         });
-                      },
+                    },
+                    hasTrailingDivider: true
                   },
                 {
                     id: 'add-chapter-event',
@@ -390,82 +424,6 @@ download(event) {
                     }
                 },
                 {
-                    id: 'add-entity',
-                    content: 'Add Entity',
-                    selector: 'node[_shape = "diamond"], node[_shape = "ellipse"]',
-                    onClickFunction: (event) => {
-                      const elementData = event.target.data();
-                      this.setState({ selectedElement: elementData });
-                      const entityName = prompt('Enter entity name:');
-                      const entityWdNode = prompt('Enter entity wd_node:');
-                      const entityWdLabel = prompt('Enter entity wd_label:');
-                      const entityWdDescription = prompt('Enter entity wd_description:');
-                      if (entityName) {
-                        const entity = {
-                          ...templates.entity,
-                          '@id': `Entities/${entity_counter++}/${entityName}`,
-                          'name': entityName,
-                          'wd_node': entityWdNode,
-                          'wd_label': entityWdLabel,
-                          'wd_description': entityWdDescription,
-                          'event': elementData['@id']
-                        };
-                      
-                        axios.post("/add_entity", {
-                          event_id: elementData['@id'],
-                          entity_data: entity
-                        })
-                        .then(res => {
-                          console.log("Response from server: ", res.data);
-                        })
-                        .catch(err => {
-                          console.error(err);
-                        });
-                      }
-                    }
-                },
-                {
-                    id: 'view-entities',
-                    content: 'View Entities',
-                    selector: 'node[_shape = "diamond"], node[_shape = "ellipse"]',
-                    onClickFunction: (event) => {
-                      axios.get('/get_all_entities')
-                        .then((response) => {
-                          const allEntities = response.data;
-                          console.log(allEntities);
-                  
-                          const dialogContent = (
-                            <div>
-                              <h2>Global Entity list</h2>
-                              <table style={{ borderCollapse: 'collapse', width: '100%', margin: '1em' }}>
-                                <thead>
-                                  <tr style={{ borderBottom: '1px solid black' }}>
-                                    <th style={{ padding: '0.5em' }}>Entity Name</th>
-                                    <th style={{ padding: '0.5em' }}>Entity ID</th>
-                                    <th style={{ padding: '0.5em' }}>Entity Label</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {allEntities.map((entity) => (
-                                    <tr key={entity['@id']} style={{ borderBottom: '1px solid black' }}>
-                                      <td style={{ padding: '0.5em' }}>{entity['name']}</td>
-                                      <td style={{ padding: '0.5em' }}>{entity['@id']}</td>
-                                      <td style={{ padding: '0.5em' }}>{entity['wd_label']}</td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          );
-                  
-                          this.setState({ dialogOpen: true, dialogContent: dialogContent });
-                        })
-                        .catch((error) => {
-                          console.error(error);
-                        });
-                    },
-                  },
-                {
                     id: 'add-relation',
                     content: 'Add Relation',
                     selector: 'node[_type = "entity"]',
@@ -498,11 +456,12 @@ download(event) {
                                 toNodeId: selectedNodeId,
                                 relation: relation
                               })
-                                .then((response) => {
-                                  console.log(response);
+                                .then((res) => {
+                                  console.log(res.data);
+                                  props.updateCallback(res.data)
                                 })
-                                .catch((error) => {
-                                  console.error(error);
+                                .catch((err) => {
+                                  console.error(err);
                             });
                         });
                     }
@@ -547,22 +506,96 @@ download(event) {
                           })
                           .then(res => {
                             console.log("Response from server: ", res.data);
+                            props.updateCallback(res.data)
                           })
                           .catch(err => {
                             console.error(err);
                           });
                         }
-                    }
+                    },
                 },
                 {
-                    id: 'undo',
-                    content: 'Undo',
-                    onClickFunction: () => {
-                        /**
-                        1. Undo last action.
-                        */     
-                    },
-                }
+                  id: 'add-entity',
+                  content: 'Add Entity',
+                  selector: 'node[_shape = "diamond"], node[_shape = "ellipse"]',
+                  onClickFunction: (event) => {
+                    const elementData = event.target.data();
+                    this.setState({ selectedElement: elementData });
+                    const entityName = prompt('Enter entity name:');
+                    const entityWdNode = prompt('Enter entity wd_node:');
+                    const entityWdLabel = prompt('Enter entity wd_label:');
+                    const entityWdDescription = prompt('Enter entity wd_description:');
+                    if (entityName) {
+                      const entity = {
+                        ...templates.entity,
+                        '@id': `Entities/${entity_counter++}/${entityName}`,
+                        'name': entityName,
+                        'wd_node': entityWdNode,
+                        'wd_label': entityWdLabel,
+                        'wd_description': entityWdDescription,
+                        'event': elementData['@id']
+                      };
+                    
+                      axios.post("/add_entity", {
+                        event_id: elementData['@id'],
+                        entity_data: entity
+                      })
+                      .then(res => {
+                        console.log("Response from server: ", res.data);
+                        props.updateCallback(res.data)
+                      })
+                      .catch(err => {
+                        console.error(err);
+                      });
+                    }
+                  },
+                  hasTrailingDivider: true
+              },
+              {
+                id: 'view-entities',
+                content: 'View Entities',
+                selector: 'node[_shape = "diamond"], node[_shape = "ellipse"]',
+                onClickFunction: (event) => {
+                    axios.get('/get_all_entities')
+                        .then((response) => {
+                            const allEntities = response.data;
+                            console.log(allEntities);
+            
+                            const dialogContent = (
+                                <div>
+                                    <h2>Global Entity list</h2>
+                                    <table style={{ borderCollapse: 'collapse', width: '100%', margin: '1em' }}>
+                                        <thead>
+                                            <tr style={{ borderBottom: '1px solid black' }}>
+                                                <th style={{ padding: '0.5em' }}>Entity Name</th>
+                                                <th style={{ padding: '0.5em' }}>Entity ID</th>
+                                                <th style={{ padding: '0.5em' }}>Entity Label</th>
+                                                {/* <th style={{ padding: '0.5em' }}>Created In</th>
+                                                <th style={{ padding: '0.5em' }}>Participant In</th> */}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {allEntities.map((entity) => (
+                                                <tr key={entity['@id']} style={{ borderBottom: '1px solid black' }}>
+                                                    <td style={{ padding: '0.5em' }}>{entity['name']}</td>
+                                                    <td style={{ padding: '0.5em' }}>{entity['@id']}</td>
+                                                    <td style={{ padding: '0.5em' }}>{entity['wd_label']}</td>
+                                                    {/* <td style={{ padding: '0.5em' }}>{entity['created_in'].join(', ')}</td>
+                                                    <td style={{ padding: '0.5em' }}>{entity['participant_in'].join(', ')}</td> */}
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            );
+            
+                            this.setState({ dialogOpen: true, dialogContent: dialogContent });
+                        })
+                        .catch((error) => {
+                            console.error(error);
+                        });
+                },
+            }
             ],
         });
     });
@@ -608,7 +641,7 @@ render() {
                 style={style}
                 stylesheet={CyStyle.stylesheet}
                 cy={(cy) => { this.cy = cy }}
-                maxZoom={2} minZoom={0.87}
+                maxZoom={3} minZoom={0.77}
             />
             <Dialog open={this.state.dialogOpen} onClose={this.handleDialogClose}>
                 {this.state.dialogContent}

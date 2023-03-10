@@ -325,8 +325,8 @@ def fix_entities(schema_json):
     for event in schema_json['events']:
         if 'entities' in event:
             for entity in event['entities']:
-                if 'entity' not in entity:
-                    entity['entity'] = {
+                if 'entities' not in entity:
+                    entity['entities'] = {
             "@id": "Entities/20000/",
             "name": "Entity",
             "wd_node": "wd:Q1234567",
@@ -377,7 +377,7 @@ def update_json(values):
         
     
     fix_participants(schema_json)
-    fix_entities(schema_json)
+    # fix_entities(schema_json)
 
     return schema_json
 
@@ -478,42 +478,34 @@ def append_node():
 
 @app.route('/remove_element', methods=['POST'])
 def remove_element():
-    id = request.json['id']
-    element_type = request.json['type']  # 'node' or 'edge'
-    
-    if element_type == 'node':
-        for i, node in enumerate(schema_json['events']):
-            if node.get('@id') == id:
-                # remove node from schema_json
-                schema_json['events'].pop(i)
+  data = request.json
+  element_id = data['id']
+  print("element_id:", element_id)
+#   element_type = data['type']
 
-                # remove node from other nodes' outlinks and children lists
-                for j, other_node in enumerate(schema_json['events']):
-                    if other_node.get('@id') != id:
-                        if 'outlinks' in other_node and id in other_node['outlinks']:
-                            other_node['outlinks'].remove(id)
-                        if 'children' in other_node and id in other_node['children']:
-                            other_node['children'].remove(id)
+  # Remove element from schema_json['events'] list
+  for event in schema_json['events']:
+    if event['@id'] == element_id:
+      schema_json['events'].remove(event)
+      break
 
-                break
-    elif element_type == 'edge':
-        for i, edge in enumerate(schema_json['relations']):
-            if edge.get('@id') == id:
-                # remove edge from schema_json
-                schema_json['relations'].pop(i)
+  # Remove element from all children lists
+  for event in schema_json['events']:
+    for child in event.get('children', []):
+      if child == element_id:
+        event['children'].remove(child)
 
-                # remove edge from the source and target nodes' inlinks and outlinks lists
-                source_id = edge.get('relationSubject')
-                target_id = edge.get('relationObject')
-                for node in schema_json['events']:
-                    if node.get('@id') == source_id and 'outlinks' in node and target_id in node['outlinks']:
-                        node['outlinks'].remove(target_id)
-                    if node.get('@id') == target_id and 'inlinks' in node and source_id in node['inlinks']:
-                        node['inlinks'].remove(source_id)
+  # Remove element from all outlinks lists
+  for event in schema_json['events']:
+    outlink_removed = False
+    for outlink in event.get('outlinks', []):
+      if outlink == element_id:
+        event['outlinks'].remove(outlink)
+        outlink_removed = True
+    if outlink_removed:
+      break
 
-                break
-    
-    return schema_json
+  return {'success': True}
 
 @app.route('/add_entity', methods=['POST'])
 def add_entity_to_event():
@@ -565,10 +557,10 @@ def add_outlink():
     # Find the event with the matching @id field
     for event in schema_json['events']:
         if event.get('@id') == from_node_id:
-            # Modify outlinks in the original dictionary
+            # Check if to_node_id already exists in outlinks
             if 'outlinks' not in event:
                 event['outlinks'] = [to_node_id]
-            else:
+            elif to_node_id not in event['outlinks']:
                 event['outlinks'].append(to_node_id)
             break
 
@@ -621,7 +613,25 @@ def get_all_entities():
     entities = []
     for event in schema_json['events']:
         for entity in event.get('entities', []):
-            entities.append(entity)
+            entity_info = {
+                '@id': entity.get('@id'),
+                'name': entity.get('name'),
+                'wd_node': entity.get('wd_node'),
+                'wd_label': entity.get('wd_label'),
+                'wd_description': entity.get('wd_description'),
+                'created_in': [],
+                'participant_in': []
+            }
+            entities.append(entity_info)
+            for key, value in event.items():
+                if isinstance(value, list) and entity.get('@id') in value:
+                    entity_info['created_in'].append(key)
+                if isinstance(value, dict) and 'participants' in value:
+                    for participant in value['participants']:
+                        if entity.get('@id') == participant.get('@id'):
+                            entity_info['participant_in'].append(key)
+
+    print(entities)
     return jsonify(entities)
 
 @app.route('/upload', methods=['POST'])

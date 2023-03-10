@@ -141,12 +141,11 @@ class Viewer extends Component {
                 className={canvasClassName}
             />;
     
-            jsonEdit = this.state.showJsonEdit ?
-                <JsonEdit
+            jsonEdit = <JsonEdit
                     style={{ width: 'inherit', height: '75vh' }}
                     schemaJson={this.state.schemaJson}
                     parentCallback={this.jsonEditorCallback}
-                /> : null;
+                />
         }
     
         return (
@@ -173,7 +172,7 @@ class Viewer extends Component {
                         sideEditorCallback={this.sideEditorCallback}
                         className={sidebarClassName} />
                     {canvas}
-                    {/* {jsonEdit} */}
+                    {jsonEdit}
                 </div>
             </div>
         )

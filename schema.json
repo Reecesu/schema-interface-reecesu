@@ -1,0 +1,240 @@
+{
+  "@id": "resin:Submissions/TA1/",
+  "sdfVersion": "3.0.0",
+  "version": "resin:Phase2b",
+  "events": [
+    {
+      "@id": "resin:Events/10000",
+      "name": "Medical Research",
+      "description": "medical research news story.",
+      "wd_node": "Q42240",
+      "wd_label": "research",
+      "wd_description": "systematic study undertaken to increase knowledge",
+      "isSchema": true,
+      "repeatable": false,
+      "children_gate": "or",
+      "outlinks": [],
+      "participants": [],
+      "children": [
+        "Events/10000/Container:Chapter_1",
+        "Events/10000/Container:Chapter_2"
+      ],
+      "entities": [],
+      "relations": [],
+      "importance": [],
+      "likelihood": []
+    },
+    {
+      "@id": "Events/10000/Container:Chapter_1",
+      "name": "Chapter 1",
+      "description": "",
+      "wd_node": [
+        "wd:Q1234567",
+        "wdt:P1234567"
+      ],
+      "wd_label": "",
+      "wd_description": "",
+      "isSchema": true,
+      "repeatable": false,
+      "children_gate": "or",
+      "outlinks": [
+        "Events/10000/Container:Chapter_2"
+      ],
+      "participants": [],
+      "children": [
+        "Events/10000/primative_event",
+        "Events/10000/subsequent_primative",
+        "Events/10000/alternative_primative",
+        "Events/10000/Container:xor"
+      ],
+      "entities": [],
+      "relations": [],
+      "optional": false,
+      "modality": [],
+      "importance": [],
+      "likelihood": []
+    },
+    {
+      "@id": "Events/10000/Container:Chapter_2",
+      "name": "Chapter 2",
+      "description": "",
+      "wd_node": [
+        "wd:Q1234567",
+        "wdt:P1234567"
+      ],
+      "wd_label": "",
+      "wd_description": "",
+      "isSchema": true,
+      "repeatable": false,
+      "children_gate": "or",
+      "outlinks": [],
+      "participants": [],
+      "children": [],
+      "entities": [],
+      "relations": [],
+      "optional": true,
+      "modality": [],
+      "importance": [],
+      "likelihood": []
+    },
+    {
+      "@id": "Events/10000/Container:xor",
+      "name": "Event outlinks",
+      "isSchema": false,
+      "outlinks": [
+        "Events/10000/subsequent_primative",
+        "Events/10000/alternative_primative"
+      ],
+      "children_gate": "xor",
+      "children": [
+        "Events/10000/subsequent_primative",
+        "Events/10000/alternative_primative"
+      ],
+      "optional": false,
+      "comment": "container node"
+    },
+    {
+      "@id": "Events/10000/primative_event",
+      "name": "primative event",
+      "description": "",
+      "wd_node": [
+        "wd:Q1234567",
+        "wdt:P1234567"
+      ],
+      "wd_label": "",
+      "wd_description": "",
+      "isSchema": false,
+      "repeatable": false,
+      "outlinks": [
+        "Events/10000/Container:xor"
+      ],
+      "participants": [
+        {
+          "@id": "Participants/20000/",
+          "roleName": "consult_XPO",
+          "entity": "Entities/20000/"
+        },
+        {
+          "@id": "Participants/20001/",
+          "roleName": "consult_XPO",
+          "entity": "Entities/20001/"
+        },
+        {
+          "@id": "Participants/20000/steve",
+          "roleName": "steve",
+          "entity": "Entities/10000/steve"
+        }
+      ],
+      "entities": [
+        {
+          "@id": "Entities/20000/",
+          "name": "Entity 1",
+          "wd_node": "wd:Q1234567",
+          "wd_label": "",
+          "wd_description": "",
+          "entity": {
+            "@id": "Entities/20000/",
+            "name": "Entity",
+            "wd_node": "wd:Q1234567",
+            "wd_label": "",
+            "wd_description": ""
+          }
+        },
+        {
+          "@id": "Entities/20001/",
+          "name": "Entity 2",
+          "wd_node": "wd:Q1234567",
+          "wd_label": "",
+          "wd_description": "",
+          "entity": {
+            "@id": "Entities/20000/",
+            "name": "Entity",
+            "wd_node": "wd:Q1234567",
+            "wd_label": "",
+            "wd_description": ""
+          }
+        },
+        {
+          "@id": "Entities/10000/steve",
+          "name": "steve",
+          "wd_node": "sdfs",
+          "wd_label": "sdf",
+          "wd_description": "sdf",
+          "entity": {
+            "@id": "Entities/20000/",
+            "name": "Entity",
+            "wd_node": "wd:Q1234567",
+            "wd_label": "",
+            "wd_description": ""
+          }
+        }
+      ],
+      "relations": [
+        {
+          "@id": "Relations/30000/",
+          "name": "relation",
+          "relationSubject": "Entities/20000/",
+          "relationObject": "Entities/20001/",
+          "wd_node": "wdt:P1234567",
+          "wd_label": "",
+          "wd_description": ""
+        },
+        {
+          "@id": "Relations/30000/test",
+          "name": "test",
+          "relationSubject": "Entities/10000/steve",
+          "relationObject": "Entities/20000/",
+          "wd_node": "test",
+          "wd_label": "test",
+          "wd_description": "test"
+        }
+      ],
+      "optional": false,
+      "modality": [],
+      "importance": [],
+      "likelihood": []
+    },
+    {
+      "@id": "Events/10000/subsequent_primative",
+      "name": "subsequent primative",
+      "description": "",
+      "wd_node": [
+        "wd:Q1234567",
+        "wdt:P1234567"
+      ],
+      "wd_label": "",
+      "wd_description": "",
+      "isSchema": false,
+      "repeatable": false,
+      "outlinks": [],
+      "participants": [],
+      "entities": [],
+      "relations": [],
+      "optional": false,
+      "modality": [],
+      "importance": [],
+      "likelihood": []
+    },
+    {
+      "@id": "Events/10000/alternative_primative",
+      "name": "alternative primative",
+      "description": "",
+      "wd_node": [
+        "wd:Q1234567",
+        "wdt:P1234567"
+      ],
+      "wd_label": "",
+      "wd_description": "",
+      "isSchema": false,
+      "repeatable": false,
+      "outlinks": [],
+      "participants": [],
+      "entities": [],
+      "relations": [],
+      "optional": false,
+      "modality": [],
+      "importance": [],
+      "likelihood": []
+    }
+  ]
+}

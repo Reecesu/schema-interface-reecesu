@@ -169,7 +169,7 @@ export default class JSONEdit extends Component {
 
         this.jsoneditor = new JSONEditor(this.container, options);
         this.jsoneditor.set(this.props.schemaJson);
-        console.log('Data received in JSONEdit: ', this.props.schemaJson);
+        // console.log('Data received in JSONEdit: ', this.props.schemaJson);
 
     }
 

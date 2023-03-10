@@ -47,9 +47,16 @@ const theme = createTheme({
 
 export default function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [schemaJson, setSchemaJson] = useState({});
+
   const handleDrawerToggle = () => {
     setDrawerOpen(!drawerOpen);
   };
+
+  const handleJsonEditCallback = (json) => {
+    setSchemaJson(json);
+  };
+
   return (
     <Router>
       <ThemeProvider theme={theme}>
@@ -114,11 +121,11 @@ export default function App() {
             </IconButton>
           </Toolbar>
         </AppBar>
-        <MuiDrawer open={drawerOpen} handleToggle={handleDrawerToggle} />
+        <MuiDrawer open={drawerOpen} handleToggle={handleDrawerToggle} schemaJson={schemaJson} parentCallback={handleJsonEditCallback} />
       </ThemeProvider>
       <Routes>
         <Route exact path="/" element={<Home />} />
-        <Route exact path="/viewer" element={<Viewer />} />
+        <Route exact path="/viewer" element={<Viewer schemaJson={schemaJson} parentCallback={handleJsonEditCallback} />} />
       </Routes>
     </Router>
   );

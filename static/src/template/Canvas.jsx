@@ -16,6 +16,10 @@ import SaveIcon from '@mui/icons-material/Save';
 import CyStyle from '../public/cy-style.json';
 import 'cytoscape-context-menus/cytoscape-context-menus.css';
 
+import Dagre from 'cytoscape-dagre';
+
+cytoscape.use(Dagre);
+
 // TODO: add uncollapse / unselect without complete reload
 // will fix the temp solution of freezing the topmost tree
 // want to use https://github.com/iVis-at-Bilkent/cytoscape.js-expand-collapse
@@ -47,7 +51,7 @@ constructor(props) {
         fileName: 'graph.png',
         selectedElement: null,
         isGraphEditOpen: false,
-        allEntities: [],
+        allEntities: []
     };
 
     // create topTree
@@ -85,23 +89,32 @@ handleSubmit = () => {
     this.setState({ isGraphEditOpen: false });
 }
 
+hideSubTree(node) {
+  node.hidden = false;
+  let subNodes = node.descendants();
+  for (let i = 0; i < subNodes.length; i++) {
+      subNodes[i].hide();
+  }
+  this.runLayout();
+}
+
 showSubTree(node) {
-    axios.get('/node', {
-        params: {
-            ID: node.id
-        }
-    })
-        .then(res => {
-            if (this.state.hasSubtree && this.state.topTree.includes(node)) {
-                this.removeSubTree();
-            }
-            this.setState({ hasSubtree: true });
-            this.cy.add(res.data);
-            this.runLayout();
-        })
-        .catch(err => {
-            console.error(err);
-        })
+  axios.get('/node', {
+      params: {
+          ID: node.id
+      }
+  })
+  .then(res => {
+      if (this.state.hasSubtree && this.state.topTree.includes(node)) {
+          this.removeSubTree();
+      }
+      this.setState({ hasSubtree: true });
+      this.cy.add(res.data);
+      this.runLayout();
+  })
+  .catch(err => {
+      console.error(err);
+  })
 }
 
 removeSubTree() {
@@ -124,22 +137,18 @@ fetchAllEntities = () => {
 }
 
 runLayout() {
-    let layout = this.cy.makeLayout({
-        name: 'breadthfirst',
-        nodeOverlap: 4,
-        directed: true,
-        nodeDimensionsIncludeLabels: true,
-        refresh: 60,
-        animate: true,
-        animationDuration: 750,
-        fit: true,
-        padding: 30,
-        randomize: false,
-        componentSpacing: 40,
-        nodeRepulsion: 40000000000000,
-    });
-    layout.run();
-    } 
+  let layout = this.cy.makeLayout({
+    name: 'dagre',
+    nodeSep: 10,
+    edgeSep: 100,
+    rankDir: 'LR',
+    animate: true,
+    animationDuration: 750,
+    fit: true,
+    padding: 30,
+  });
+  layout.run();
+}
 
 reloadCanvas() {
     this.setState({
@@ -268,9 +277,9 @@ download(event) {
 }
 
         componentDidMount() {
-            this.cy.ready(() => {
-                // left-click 
-                this.cy.on('tap', event => {
+          this.cy.ready(() => {
+            // left-click 
+            this.cy.on('tap', event => {
                 var eventTarget = event.target;
                 //click background
                 if (eventTarget === this.cy) {
@@ -281,7 +290,7 @@ download(event) {
                     // console.log('selectedElement (left-click):', node); 
                     this.showSubTree(node);
                 }
-                });
+            });
 
             /*  We cannot use elementData here, and in the context menu because it is triggering 
                 the GraphEdit.jsx dialog component early. We need to pass data through selectedElement state without activiating the dialog.
@@ -558,20 +567,23 @@ download(event) {
                 onClickFunction: (event) => {
                     axios.get('/get_all_entities')
                         .then((response) => {
-                            const allEntities = response.data;
+                            let allEntities = response.data;
                             console.log(allEntities);
             
+                            // Sort entities by the length of 'participant_in' array in descending order
+                            allEntities.sort((a, b) => b['participant_in'].length - a['participant_in'].length);
+            
                             const dialogContent = (
-                                <div>
-                                    <h2>Global Entity list</h2>
-                                    <table style={{ borderCollapse: 'collapse', width: '100%', margin: '1em' }}>
+                                <div style={{ display: 'inline-block', minWidth: '150vw' }}>
+                                    <h2>Global Entity Table</h2>
+                                    <table style={{ borderCollapse: 'collapse', width: '100%', margin: '1em', tableLayout: 'auto' }}>
                                         <thead>
                                             <tr style={{ borderBottom: '1px solid black' }}>
                                                 <th style={{ padding: '0.5em' }}>Entity Name</th>
                                                 <th style={{ padding: '0.5em' }}>Entity ID</th>
                                                 <th style={{ padding: '0.5em' }}>Entity Label</th>
-                                                {/* <th style={{ padding: '0.5em' }}>Created In</th>
-                                                <th style={{ padding: '0.5em' }}>Participant In</th> */}
+                                                <th style={{ padding: '0.5em' }}>Created In</th>
+                                                <th style={{ padding: '0.5em' }}>Participant In</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -580,8 +592,8 @@ download(event) {
                                                     <td style={{ padding: '0.5em' }}>{entity['name']}</td>
                                                     <td style={{ padding: '0.5em' }}>{entity['@id']}</td>
                                                     <td style={{ padding: '0.5em' }}>{entity['wd_label']}</td>
-                                                    {/* <td style={{ padding: '0.5em' }}>{entity['created_in'].join(', ')}</td>
-                                                    <td style={{ padding: '0.5em' }}>{entity['participant_in'].join(', ')}</td> */}
+                                                    <td style={{ padding: '0.5em' }}>{entity['created_in'].join(', ')}</td>
+                                                    <td style={{ padding: '0.5em' }}>{entity['participant_in'].join(', ')}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -643,8 +655,17 @@ render() {
                 cy={(cy) => { this.cy = cy }}
                 maxZoom={3} minZoom={0.77}
             />
-            <Dialog open={this.state.dialogOpen} onClose={this.handleDialogClose}>
-                {this.state.dialogContent}
+            <Dialog
+              maxWidth='100vw'
+              open={this.state.dialogOpen}
+              onClose={this.handleDialogClose}
+              PaperProps={{
+                style: {
+                  padding: '20px'
+                }
+              }}
+            >
+              {this.state.dialogContent}
             </Dialog>
             <div style={buttonContainer}>
                 <RefreshIcon type='button' color="action" fontSize='large' onClick={this.reloadCanvas} />

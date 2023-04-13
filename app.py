@@ -25,6 +25,33 @@ schema_key_dict = {
 
 # def transform_version()
 
+def is_ta2_format(data):
+    return '@context' in data and 'instances' in data
+
+def convert_ta2_to_ta1_format(ta2):
+    ta1 = {
+        'events': [],
+        'entities': [],
+        'relations': [],
+    }
+
+    if ta2['instances'] and len(ta2['instances']) > 0:
+        instance = ta2['instances'][0]
+
+        for event in instance['events']:
+            new_event = event.copy()
+            if 'entities' in event:
+                for entity in event['entities']:
+                    ta1['entities'].append(entity)
+                del new_event['entities']
+            if 'relations' in event:
+                for relation in event['relations']:
+                    ta1['relations'].append(relation)
+                del new_event['relations']
+            ta1['events'].append(new_event)
+
+    return ta1
+
 def create_node(_id, _label, _type, _shape=''):
     """Creates a node.
 
@@ -349,7 +376,7 @@ def update_json(values):
     """
     global schema_json
     node_id = values['id']
-    print("values:", values)
+    # print("values:", values)
     node_to_update = None
     for event in schema_json['events']:
         if node_id == event["@id"]:
@@ -409,10 +436,11 @@ def get_connected_nodes(selected_node):
                 break
     else:
         root_node = nodes[selected_node]
-
+    # print("Nodes:", nodes)
     # node children
     for edge in edges:
         if edge['data']['source'] == root_node['data']['id']:
+            # print("Edge causing KeyError:", edge)
             node = nodes[edge['data']['target']]
             # skip entities
             if selected_node == 'root' and node['data']['_type'] == 'entity':
@@ -610,28 +638,37 @@ def add_relation():
 
 @app.route('/get_all_entities', methods=['GET'])
 def get_all_entities():
-    entities = []
+    entities_dict = {}
+
+    # Populate the entities_dict with basic information about the entities
     for event in schema_json['events']:
         for entity in event.get('entities', []):
-            entity_info = {
-                '@id': entity.get('@id'),
-                'name': entity.get('name'),
-                'wd_node': entity.get('wd_node'),
-                'wd_label': entity.get('wd_label'),
-                'wd_description': entity.get('wd_description'),
-                'created_in': [],
-                'participant_in': []
-            }
-            entities.append(entity_info)
-            for key, value in event.items():
-                if isinstance(value, list) and entity.get('@id') in value:
-                    entity_info['created_in'].append(key)
-                if isinstance(value, dict) and 'participants' in value:
-                    for participant in value['participants']:
-                        if entity.get('@id') == participant.get('@id'):
-                            entity_info['participant_in'].append(key)
+            entity_id = entity.get('@id')
+            if entity_id not in entities_dict:
+                entity_info = {
+                    '@id': entity_id,
+                    'name': entity.get('name'),
+                    'wd_node': entity.get('wd_node'),
+                    'wd_label': entity.get('wd_label'),
+                    'wd_description': entity.get('wd_description'),
+                    'created_in': [],
+                    'participant_in': []
+                }
+                entities_dict[entity_id] = entity_info
 
-    print(entities)
+            if event.get('@id') not in entities_dict[entity_id]['created_in']:
+                entities_dict[entity_id]['created_in'].append(event.get('name'))
+
+    # Add participant information to the entities in entities_dict
+    for event in schema_json['events']:
+        participants = event.get('participants', [])
+        for participant in participants:
+            participant_entity_id = participant.get('entity')
+            if participant_entity_id in entities_dict:
+                if event.get('@id') not in entities_dict[participant_entity_id]['participant_in']:
+                    entities_dict[participant_entity_id]['participant_in'].append(event.get('name'))
+
+    entities = list(entities_dict.values())
     return jsonify(entities)
 
 @app.route('/upload', methods=['POST'])
@@ -644,11 +681,12 @@ def upload():
     global edges
     global schema_name
     schema_json = json.loads(schema_string)
+    
+    if is_ta2_format(schema_json):
+        schema_json = convert_ta2_to_ta1_format(schema_json)
+        
     nodes, edges = get_nodes_and_edges(schema_json)
     schema_name, parsed_schema = get_connected_nodes('root')
-    # print("\nschema_name from upload:", schema_name)
-    # print("\nparsed_schema from upload:", parsed_schema)
-    # print("\nschema_json from upload:", schema_json)
     return json.dumps({
         'parsedSchema': parsed_schema,
         'name': schema_name,

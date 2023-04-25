@@ -23,34 +23,34 @@ schema_key_dict = {
     'relation': ['name', 'wd_node', 'wd_label', 'modality', 'wd_description', 'ta1ref', 'relationSubject', 'relationObject', 'relationPredicate']
 }
 
-# def transform_version()
+# # def transform_version()
 
-def is_ta2_format(data):
-    return '@context' in data and 'instances' in data
+# def is_ta2_format(data):
+#     return '@context' in data and 'instances' in data
 
-def convert_ta2_to_ta1_format(ta2):
-    ta1 = {
-        'events': [],
-        'entities': [],
-        'relations': [],
-    }
+# def convert_ta2_to_ta1_format(ta2):
+#     ta1 = {
+#         'events': [],
+#         'entities': [],
+#         'relations': [],
+#     }
 
-    if ta2['instances'] and len(ta2['instances']) > 0:
-        instance = ta2['instances'][0]
+#     if ta2['instances'] and len(ta2['instances']) > 0:
+#         instance = ta2['instances'][0]
 
-        for event in instance['events']:
-            new_event = event.copy()
-            if 'entities' in event:
-                for entity in event['entities']:
-                    ta1['entities'].append(entity)
-                del new_event['entities']
-            if 'relations' in event:
-                for relation in event['relations']:
-                    ta1['relations'].append(relation)
-                del new_event['relations']
-            ta1['events'].append(new_event)
+#         for event in instance['events']:
+#             new_event = event.copy()
+#             if 'entities' in event:
+#                 for entity in event['entities']:
+#                     ta1['entities'].append(entity)
+#                 del new_event['entities']
+#             if 'relations' in event:
+#                 for relation in event['relations']:
+#                     ta1['relations'].append(relation)
+#                 del new_event['relations']
+#             ta1['events'].append(new_event)
 
-    return ta1
+#     return ta1
 
 def create_node(_id, _label, _type, _shape=''):
     """Creates a node.
@@ -682,8 +682,8 @@ def upload():
     global schema_name
     schema_json = json.loads(schema_string)
     
-    if is_ta2_format(schema_json):
-        schema_json = convert_ta2_to_ta1_format(schema_json)
+    # if is_ta2_format(schema_json):
+    #     schema_json = convert_ta2_to_ta1_format(schema_json)
         
     nodes, edges = get_nodes_and_edges(schema_json)
     schema_name, parsed_schema = get_connected_nodes('root')

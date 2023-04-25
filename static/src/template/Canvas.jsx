@@ -1,38 +1,33 @@
 import React from 'react';
-import CytoscapeComponent from 'react-cytoscapejs';
-import Dialog from '@mui/material/Dialog';
+import axios from 'axios';
+
 import templates from './templates';
-import cytoscape from 'cytoscape';
-import klay from 'cytoscape-klay';
-import contextMenus from 'cytoscape-context-menus';
 import GraphEdit from './GraphEdit';
 
-import axios from 'axios';
+import klay from 'cytoscape-klay';
+import Dagre from 'cytoscape-dagre';
+import cytoscape from 'cytoscape';
+import CytoscapeComponent from 'react-cytoscapejs';
+import contextMenus from 'cytoscape-context-menus';
+import cytoscapeNavigator from 'cytoscape-navigator';
+import CyStyle from '../public/cy-style.json';
+
 import equal from 'fast-deep-equal';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import AspectRatioIcon from '@mui/icons-material/AspectRatio';
 import SaveIcon from '@mui/icons-material/Save';
+import MapIcon from '@mui/icons-material/Map';
+import Dialog from '@mui/material/Dialog';
+import IconButton from '@mui/material/IconButton';
+import FileCopyIcon from '@mui/icons-material/FileCopy'
 
-import CyStyle from '../public/cy-style.json';
 import 'cytoscape-context-menus/cytoscape-context-menus.css';
-
-import Dagre from 'cytoscape-dagre';
+import "cytoscape-navigator/cytoscape.js-navigator.css";
 
 cytoscape.use(Dagre);
-
-// TODO: add uncollapse / unselect without complete reload
-// will fix the temp solution of freezing the topmost tree
-// want to use https://github.com/iVis-at-Bilkent/cytoscape.js-expand-collapse
-// will help with the weird recentering problem with the animation
-// looks like it will require changing edge types and classes
 cytoscape.use(klay)
 cytoscape.use(contextMenus);
-
-/*  Graph view of the data.
-    Includes reload, fit to graph, and save current view button.
-    Left click to expand node, right click to expand / collapse sidebar of information.
-    Right click also gives a context menu to remove elements for visualization purposes. 
-*/
+cytoscape.use(cytoscapeNavigator);
 
 let event_counter = 20000;
 let entity_counter = 10000;
@@ -45,12 +40,14 @@ constructor(props) {
     this.state = {
         canvasElements: CytoscapeComponent.normalizeElements(this.props.elements),
         hasSubtree: false,
+        dialogOpen: false,
         topTree: null,
         removed: null,
         downloadUrl: '',
-        fileName: 'graph.png',
+        fileName: 'schema_graph.png',
         selectedElement: null,
         isGraphEditOpen: false,
+        isNavigatorVisible: false,
         allEntities: []
     };
 
@@ -71,9 +68,16 @@ constructor(props) {
     this.fitCanvas = this.fitCanvas.bind(this);
     this.download = this.download.bind(this);
     this.handleOpen = this.handleOpen.bind(this);
+    this.navigatorRef = React.createRef();
     this.graphHistory = [];
     // console.log('canvasElements:', this.state.canvasElements);
 }
+
+handleNavigatorToggle = () => {
+  this.setState((prevState) => ({
+    isNavigatorVisible: !prevState.isNavigatorVisible,
+  }));
+};
 
 showSidebar(data) {
     this.props.sidebarCallback(data);
@@ -263,6 +267,15 @@ removeEntityFromSchemaJson(entityId) {
     return schemaJson;
   }
 
+  initNavigator() {
+    this.cy.navigator({
+      container: this.navigatorRef.current,
+      viewLiveFramerate: 60,
+      thumbnailEventFramerate: 60,
+      thumbnailLiveFramerate: false,
+      dblClickDelay: 200,
+    });
+  }
 
 download(event) {
     event.preventDefault();
@@ -278,6 +291,7 @@ download(event) {
 
         componentDidMount() {
           this.cy.ready(() => {
+            this.initNavigator();
             // left-click 
             this.cy.on('tap', event => {
                 var eventTarget = event.target;
@@ -340,7 +354,7 @@ download(event) {
                         });
                       }
                     },
-                    hasTrailingDivider: true
+                    // hasTrailingDivider: true
                   },
                 {
                     id: 'add-outlink',
@@ -480,22 +494,6 @@ download(event) {
                     content: 'Add Participant',
                     selector: 'node[_shape = "ellipse"]',
                     onClickFunction: (event) => {
-                        /** 
-                        1. Display table of available entities in root node 'entities': [] and selectedElement 'entities': [].
-                        2. PARTICIPANT_TEMPLATE is added to selectedElement 'participants': [].
-                        3. Participant @id is generated from 'Participants/' + participant_counter + '/' + 'name' (Participants/2xxxx/name).
-                        4. Selected 'entity' is set to "entity" field of PARTICIPANT_TEMPLATE.
-                        5. Participant 'roleName' is set to 'consult_XPO' (default).
-
-                        PARTICIPANT_TEMPLATE:
-
-                            {
-                                "@id": "",
-                                "roleName": "consult_XPO",
-                                "entity": ""
-                            },
-                
-                        */
                         const elementData = event.target.data();
                         this.setState({ selectedElement: elementData });
                         const participantName = prompt('Enter participant name:');
@@ -565,49 +563,65 @@ download(event) {
                 content: 'View Entities',
                 selector: 'node[_shape = "diamond"], node[_shape = "ellipse"]',
                 onClickFunction: (event) => {
-                    axios.get('/get_all_entities')
-                        .then((response) => {
-                            let allEntities = response.data;
-                            console.log(allEntities);
-            
-                            // Sort entities by the length of 'participant_in' array in descending order
-                            allEntities.sort((a, b) => b['participant_in'].length - a['participant_in'].length);
-            
-                            const dialogContent = (
-                                <div style={{ display: 'inline-block', minWidth: '150vw' }}>
-                                    <h2>Global Entity Table</h2>
-                                    <table style={{ borderCollapse: 'collapse', width: '100%', margin: '1em', tableLayout: 'auto' }}>
-                                        <thead>
-                                            <tr style={{ borderBottom: '1px solid black' }}>
-                                                <th style={{ padding: '0.5em' }}>Entity Name</th>
-                                                <th style={{ padding: '0.5em' }}>Entity ID</th>
-                                                <th style={{ padding: '0.5em' }}>Entity Label</th>
-                                                <th style={{ padding: '0.5em' }}>Created In</th>
-                                                <th style={{ padding: '0.5em' }}>Participant In</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {allEntities.map((entity) => (
-                                                <tr key={entity['@id']} style={{ borderBottom: '1px solid black' }}>
-                                                    <td style={{ padding: '0.5em' }}>{entity['name']}</td>
-                                                    <td style={{ padding: '0.5em' }}>{entity['@id']}</td>
-                                                    <td style={{ padding: '0.5em' }}>{entity['wd_label']}</td>
-                                                    <td style={{ padding: '0.5em' }}>{entity['created_in'].join(', ')}</td>
-                                                    <td style={{ padding: '0.5em' }}>{entity['participant_in'].join(', ')}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            );
-            
-                            this.setState({ dialogOpen: true, dialogContent: dialogContent });
-                        })
-                        .catch((error) => {
-                            console.error(error);
-                        });
+                  axios.get('/get_all_entities')
+                    .then((response) => {
+                      let allEntities = response.data;
+                      console.log(allEntities);
+              
+                      // Sort entities by the length of 'participant_in' array in descending order
+                      allEntities.sort((a, b) => b['participant_in'].length - a['participant_in'].length);
+              
+                      const dialogContent = (
+                        <div style={{ display: 'inline-block', minWidth: '150vw' }}>
+                          <h2>Global Entity Table</h2>
+                          <table style={{ borderCollapse: 'collapse', width: '100%', margin: '1em', tableLayout: 'auto' }}>
+                            <thead>
+                              <tr style={{ borderBottom: '1px solid black' }}>
+                                <th style={{ padding: '0.5em' }}>Entity Name</th>
+                                <th style={{ padding: '0.5em' }}>WikiData Label</th>
+                                <th style={{ padding: '0.5em' }}>Copy</th>
+                                <th style={{ padding: '0.5em' }}>Entity ID</th>
+                                <th style={{ padding: '0.5em' }}>Created In</th>
+                                <th style={{ padding: '0.5em' }}>Participant In</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                            {allEntities.map((entity) => (
+                              <tr key={entity['@id']} style={{ borderBottom: '1px solid black' }}>
+                                <td style={{ padding: '0.5em' }}>{entity['name']}</td>
+                                <td style={{ padding: '0.5em' }}>{entity['wd_label']}</td>
+                                <td style={{ padding: '0.5em' }}>
+                                  <IconButton
+                                    edge="end"
+                                    color="inherit"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(entity['@id']).then(
+                                        () => console.log('Copied to clipboard:', entity['@id']),
+                                        (err) => console.error('Could not copy text:', err)
+                                      );
+                                    }}
+                                  >
+                                    <FileCopyIcon />
+                                  </IconButton>
+                                </td>
+                                <td style={{ padding: '0.5em' }}>{entity['@id']}</td>
+                                <td style={{ padding: '0.5em' }}>{entity['created_in'].join(', ')}</td>
+                                <td style={{ padding: '0.5em' }}>{entity['participant_in'].join(', ')}</td>
+                                
+                              </tr>
+                            ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      );
+              
+                      this.setState({ dialogOpen: true, dialogContent: dialogContent });
+                    })
+                    .catch((error) => {
+                      console.error(error);
+                    });
                 },
-            }
+              }
             ],
         });
     });
@@ -637,12 +651,25 @@ render() {
     };
 
     const buttonContainer = {
-        position: 'absolute',
-        top: 185,
-        left: 20,
-        width: '15px',
-        height: '3vh',
-        marginLeft: '20px',
+      position: 'absolute',
+      top: 185,
+      left: 40,
+      width: 'max-content',
+      height: 'max-content',
+      display: 'flex',
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#FFF',
+      padding: '10px',
+      borderRadius: '5px',
+      boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.5)'
+    };
+
+    const navigatorStyle = {
+      width: "150px",
+      height: "150px",
+      display: this.state.isNavigatorVisible ? "block" : "none",
     };
 
     return (
@@ -665,18 +692,20 @@ render() {
                 }
               }}
             >
-              {this.state.dialogContent}
+              {this.state.dialogOpen}
             </Dialog>
             <div style={buttonContainer}>
                 <RefreshIcon type='button' color="action" fontSize='large' onClick={this.reloadCanvas} />
+                <MapIcon type="button" color="action" fontSize="large" onClick={this.handleNavigatorToggle} />
                 <AspectRatioIcon type='button' color="action" fontSize='large' onClick={this.fitCanvas} />
-                <SaveIcon className="button" type="button" color="action" onClick={this.download} />
+                <SaveIcon className="button" type="button" color="action" onClick={this.download} style={{ fontSize: '32px' }}/>
                 <a style={{ display: "none" }}
                     download={this.state.fileName}
                     href={this.state.downloadUrl}
                     ref={e => this.dofileDownload = e}
                 >download graph image</a>
             </div>
+            <div ref={this.navigatorRef} style={navigatorStyle} key={this.state.isNavigatorVisible} />
             <GraphEdit
                 selectedElement={this.state.selectedElement}
                 handleClose={() => this.setState({ isGraphEditOpen: false })}

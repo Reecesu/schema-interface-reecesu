@@ -7,6 +7,7 @@ import {
   DialogActions, 
   DialogContent, 
   DialogContentText, 
+  FormControlLabel,
   DialogTitle, 
   TextField,
   Switch
@@ -68,12 +69,28 @@ const GraphEdit = React.forwardRef((props, ref) => {
     });
   };
 
-  const handleSwitchChange = (e) => {
-    // update data state with the new value
-    setData(prevData => {
+  const handleSwitchChange = (e) => {	
+    // update data state with the new value	
+    setData(prevData => {	
+      const newSelectedElement = {	
+        ...prevData.selectedElement,	
+        [e.target.name]: e.target.checked,	
+      };	
+      return {	
+        ...prevData,	
+        selectedElement: newSelectedElement,	
+      };	
+    });	
+  };	
+
+  const handleBooleanChange = (e) => {
+    const targetName = e.target.name;
+    const newValue = e.target.checked ? 'true' : 'false';
+  
+    setData((prevData) => {
       const newSelectedElement = {
         ...prevData.selectedElement,
-        [e.target.name]: e.target.checked,
+        [targetName]: newValue,
       };
       return {
         ...prevData,
@@ -82,16 +99,16 @@ const GraphEdit = React.forwardRef((props, ref) => {
     });
   };
 
-  const addChapterEventIdToChildren = (newEventId, selectedElementId) => {
-    schema_json['events'].forEach(element => {
-      if (element['@id'] === selectedElementId) {
-        if (!element.children) {
-          element.children = [newEventId];
-        } else {
-          element.children.push(newEventId);
-        }
-      }
-    });
+  const addChapterEventIdToChildren = (newEventId, selectedElementId) => {	
+    schema_json['events'].forEach(element => {	
+      if (element['@id'] === selectedElementId) {	
+        if (!element.children) {	
+          element.children = [newEventId];	
+        } else {	
+          element.children.push(newEventId);	
+        }	
+      }	
+    });	
   };
 
   const handleSubmit = (e) => {
@@ -150,7 +167,7 @@ const GraphEdit = React.forwardRef((props, ref) => {
   };
 
   let i = 0;
-  const excluded_ids = ['id', '_label', '_type', '_shape', '_edge_type', 'child','participants','outlinks', 'relations', 'children_gate', 'key', 'modality']
+  const excluded_ids = ['id', '_label', '_type', '_shape', '_edge_type', 'child','outlinks', 'relations', 'children_gate', 'key', 'modality']
   const selectedElement = data.selectedElement || {};
 
   // console.log("data: ", data);
@@ -173,32 +190,47 @@ const GraphEdit = React.forwardRef((props, ref) => {
         <form noValidate autoComplete="off">
         {data.selectedElement && Object.entries(data.selectedElement).map(([key, val]) => (
           !excluded_ids.includes(key) && (
-            <TextField
-              key={key}
-              fullWidth
-              margin="dense"
-              id={key}
-              label={key}
-              name={key}
-              value={(Array.isArray(val) && key !== "wd_node" && key !== "children") ? val.map(v => v["@id"]).join(", ") : val}
-              onChange={handleChange}
-              onBlur={() => handleEdit(key, edit)}
-              inputRef={key === 'name' ? refFocus : null}
-              multiline={Array.isArray(val) || isBoolean(val)}
-              select={isBoolean(val)}
-              SelectProps={isBoolean(val) ? {
-                native: true
-              } : undefined}
-            >
-              {(Array.isArray(val) && key !== "wd_node" && key !== "children") ? val.map((item, index) => (
-                <option key={index} value={item["@id"]}>{item["@id"]}</option>
-              )) : isBoolean(val) ? (
-                <>
-                  <option value={true}>true</option>
-                  <option value={false}>false</option>
-                </>
-              ) : null}
-            </TextField>
+            isBoolean(val) ? (
+              <FormControlLabel
+                key={key}
+                control={
+                  <Switch
+                    checked={val}
+                    onChange={handleBooleanChange}
+                    name={key}
+                    color="primary"
+                  />
+                }
+                label={key}
+              />
+            ) : (
+              <TextField
+                key={key}
+                fullWidth
+                margin="dense"
+                id={key}
+                label={key}
+                name={key}
+                value={(Array.isArray(val) && key !== "wd_node" && key !== "children") ? val.map(v => v["@id"]).join(", ") : val}
+                onChange={handleChange}
+                onBlur={() => handleEdit(key, edit)}
+                inputRef={key === 'name' ? refFocus : null}
+                multiline={Array.isArray(val)}
+                select={isBoolean(val)}
+                SelectProps={isBoolean(val) ? {
+                  native: true
+                } : undefined}
+              >
+                {(Array.isArray(val) && key !== "wd_node" && key !== "children") ? val.map((item, index) => (
+                  <option key={index} value={item["@id"]}>{item["@id"]}</option>
+                )) : isBoolean(val) ? (
+                  <>
+                    <option value={true}>true</option>
+                    <option value={false}>false</option>
+                  </>
+                ) : null}
+              </TextField>
+            )
           )
         ))}
         </form>

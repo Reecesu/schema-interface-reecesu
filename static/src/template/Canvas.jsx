@@ -48,6 +48,7 @@ constructor(props) {
         selectedElement: null,
         isGraphEditOpen: false,
         isNavigatorVisible: false,
+        dialogContent: null,
         allEntities: []
     };
 
@@ -692,7 +693,7 @@ render() {
                 }
               }}
             >
-              {this.state.dialogOpen}
+              {this.state.dialogContent}
             </Dialog>
             <div style={buttonContainer}>
                 <RefreshIcon type='button' color="action" fontSize='large' onClick={this.reloadCanvas} />

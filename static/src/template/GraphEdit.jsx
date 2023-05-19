@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
+import { blue } from '@material-ui/core/colors';
 import { isBoolean, isEmpty } from "lodash";
 import { 
   Button, 
@@ -10,23 +11,71 @@ import {
   FormControlLabel,
   DialogTitle, 
   TextField,
-  Switch
-} from "@mui/material";
+  Switch,
+  Typography,
+  Paper,
+  Box,
+  makeStyles
+} from "@material-ui/core";
 import _ from "lodash";
+import Draggable from 'react-draggable';
+
+function PaperComponent(props) {
+  return (
+    <Draggable handle="#draggable-dialog-title" cancel={'[class*="MuiDialogContent-root"]'}>
+      <Paper {...props} />
+    </Draggable>
+  );
+}
+
+const useStyles = makeStyles((theme) => ({
+  halfWidthDialog: {
+    width: '50%', // Change the width of the dialog to 50%
+  },
+  dialogTitle: {
+    fontSize: '3rem',
+    color: blue[900], // Change color to darker blue
+  },
+  header: {
+    fontSize: '1rem', // normal size
+    fontWeight: 'bold', // make the font bold
+    color: blue[900], // Change color to darker blue
+  },
+  multilineInput: {
+    minHeight: '3em', // Set the minimum height to accommodate 3 lines
+    maxHeight: '6em', // Set the maximum height to accommodate 3 lines
+    overflow: 'hidden', // Clip text to the last line
+  },
+}));
 
 const GraphEdit = React.forwardRef((props, ref) => {
   const initData = {
     selectedElement: props.selectedElement,
+    entityNames: {},
+    eventNames: {}
   };
-  // console.log("props.selectedElement: ", props.selectedElement);
+
+  const classes = useStyles();
 
   const [data, setData] = useState(initData);
   const [edit, setEdit] = useState("");
   const [open, setOpen] = useState(!!props.selectedElement);
   const refFocus = useRef(null);
 
+  // Add a useEffect hook to fetch entity names from the server
   useEffect(() => {
-    const newData = { selectedElement: props.selectedElement };
+    axios.get("/get_all_entities").then(res => {
+      const entityNames = {};
+      res.data.forEach(entity => {
+        entityNames[entity["@id"]] = entity["name"];
+      });
+      setData(prevData => ({ ...prevData, entityNames }));
+    });
+    // TODO: Similarly, fetch event names from the server
+  }, []);
+
+  useEffect(() => {
+    const newData = { selectedElement: props.selectedElement, entityNames: data.entityNames, eventNames: data.eventNames };
     setData(newData);
     setOpen(!!props.selectedElement);
   }, [props.selectedElement]);
@@ -170,77 +219,77 @@ const GraphEdit = React.forwardRef((props, ref) => {
   const excluded_ids = ['id', '_label', '_type', '_shape', '_edge_type', 'child','outlinks', 'relations', 'children_gate', 'key', 'modality']
   const selectedElement = data.selectedElement || {};
 
-  // console.log("data: ", data);
-  // console.log("selectedElement: ", selectedElement);
-  // console.log("edit: ", edit);
-  // console.log("open: ", open);
-  // console.log("refFocus: ", refFocus);
-
   return (
-    <Dialog open={open} onClose={handleClose} ref={ref} maxWidth={false}>
-      <DialogTitle>{isEmpty(data) ? "" : data.selectedElement?.["_label"]}</DialogTitle>
+    <Dialog open={open} onClose={handleClose} ref={ref} maxWidth={false} classes={{ paper: classes.halfWidthDialog }} PaperComponent={PaperComponent}>
+      <DialogTitle id="draggable-dialog-title" className={classes.dialogTitle}>{isEmpty(data) ? "" : data.selectedElement?.["_label"]}</DialogTitle>
       <DialogContent>
-        {isEmpty(data) ? (
+          {isEmpty(data) ? (
           ""
-        ) : (
+          ) : (
           <DialogContentText>
-            Edit the properties of {data.selectedElement?.["_label"]}.
+              Edit the properties of {data.selectedElement?.["_label"]}.
           </DialogContentText>
-        )}
-        <form noValidate autoComplete="off">
-        {data.selectedElement && Object.entries(data.selectedElement).map(([key, val]) => (
-          !excluded_ids.includes(key) && (
-            isBoolean(val) ? (
-              <FormControlLabel
-                key={key}
-                control={
-                  <Switch
-                    checked={val}
-                    onChange={handleBooleanChange}
-                    name={key}
-                    color="primary"
-                  />
+          )}
+          <form noValidate autoComplete="off">
+            <Box display="flex" flexDirection="column" justifyContent="space-between" minHeight="200px">
+              {data.selectedElement && Object.entries(data.selectedElement).map(([key, val]) => {
+                if (excluded_ids.includes(key) || ['participants', 'children', 'entities'].includes(key)) return null;
+                return (
+                  <Box flexGrow={1} key={key}>
+                    {isBoolean(val) ? (
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={val}
+                            onChange={handleBooleanChange}
+                            name={key}
+                            color="primary"
+                          />
+                        }
+                        label={key}
+                      />
+                    ) : (
+                      <TextField
+                        autoFocus
+                        margin="dense"
+                        label={key}
+                        type="text"
+                        fullWidth
+                        name={key}
+                        value={
+                          (Array.isArray(val) && key !== "wd_node" && key !== "children") 
+                          ? val.map(v => v["name"] || v["@id"]).join(", ") 
+                          : val
+                        }
+                        onChange={handleChange}
+                        multiline={key === 'description' || key === 'wd_description'} // Enable multiline for the 'description' and 'wd_description' fields
+                        className={(key === 'description' || key === 'wd_description') ? classes.multilineInput : null} // Apply the multiline styles to the 'description' and 'wd_description' fields
+                      />
+                    )}
+                  </Box>
+                )
+              })}
+              {data.selectedElement && ['entities', 'participants', 'children'].map((key) => {
+                const val = data.selectedElement[key];
+                if (val && val.length > 0) {
+                  return (
+                    <Box key={key}>
+                      <Typography variant="h10" className={classes.header}>{_.capitalize(key)}</Typography>
+                      <Typography>{val.map(v => (v["@id"] || v["name"]) ? (v["name"] || data.entityNames[v["@id"]] || data.eventNames[v["@id"]] || v["@id"]) : v).join(", ")}</Typography>
+                    </Box>
+                  );
+                } else {
+                  return null;
                 }
-                label={key}
-              />
-            ) : (
-              <TextField
-                key={key}
-                fullWidth
-                margin="dense"
-                id={key}
-                label={key}
-                name={key}
-                value={(Array.isArray(val) && key !== "wd_node" && key !== "children") ? val.map(v => v["@id"]).join(", ") : val}
-                onChange={handleChange}
-                onBlur={() => handleEdit(key, edit)}
-                inputRef={key === 'name' ? refFocus : null}
-                multiline={Array.isArray(val)}
-                select={isBoolean(val)}
-                SelectProps={isBoolean(val) ? {
-                  native: true
-                } : undefined}
-              >
-                {(Array.isArray(val) && key !== "wd_node" && key !== "children") ? val.map((item, index) => (
-                  <option key={index} value={item["@id"]}>{item["@id"]}</option>
-                )) : isBoolean(val) ? (
-                  <>
-                    <option value={true}>true</option>
-                    <option value={false}>false</option>
-                  </>
-                ) : null}
-              </TextField>
-            )
-          )
-        ))}
-        </form>
+              })}
+            </Box>
+          </form>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>Cancel</Button>
-        <Button onClick={handleSubmit}>Submit</Button>
+          <Button onClick={handleClose}>Cancel</Button>
+          <Button onClick={handleSubmit}>Submit</Button>
       </DialogActions>
     </Dialog>
   );
 });
-
 export default GraphEdit;

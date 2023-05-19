@@ -3,10 +3,16 @@ import axios from 'axios';
 
 import templates from './templates';
 import GraphEdit from './GraphEdit';
+import AddParticipantDialog from './AddParticipant';
+import AddEventDialog from './AddEvent';
+import AddRelationDialog from './AddRelation';
+import AddEntityDialog from './AddEntity';
+import AddXORDialog from './AddXOR';
 
 import klay from 'cytoscape-klay';
 import Dagre from 'cytoscape-dagre';
 import cytoscape from 'cytoscape';
+import Tooltip from '@mui/material/Tooltip';
 import CytoscapeComponent from 'react-cytoscapejs';
 import contextMenus from 'cytoscape-context-menus';
 import cytoscapeNavigator from 'cytoscape-navigator';
@@ -18,7 +24,11 @@ import AspectRatioIcon from '@mui/icons-material/AspectRatio';
 import SaveIcon from '@mui/icons-material/Save';
 import MapIcon from '@mui/icons-material/Map';
 import Dialog from '@mui/material/Dialog';
+import DeleteIcon from '@mui/icons-material/Delete';
+import CloseIcon from '@material-ui/icons/Close';
+import Button from '@material-ui/core/Button';
 import IconButton from '@mui/material/IconButton';
+import Typography from '@mui/material/Typography';
 import FileCopyIcon from '@mui/icons-material/FileCopy'
 
 import 'cytoscape-context-menus/cytoscape-context-menus.css';
@@ -49,6 +59,18 @@ constructor(props) {
         isGraphEditOpen: false,
         isNavigatorVisible: false,
         dialogContent: null,
+        event_counter: 20000,
+        entity_counter: 10000,
+        isAddEntityDialogOpen: false,
+        isAddParticipantDialogOpen: false,
+        addRelationDialogOpen: false,
+        addEventDialogOpen: false,
+        isAddXORDialogOpen: false,
+        selectedElementForAddRelation: null,
+        selectedElementForAddParticipant: null,
+        selectedElementForAddEntity: null,
+        selectedElementForAddEvent: null,
+        selectedElementForAddXOR: null,
         allEntities: []
     };
 
@@ -76,8 +98,195 @@ constructor(props) {
 
 handleNavigatorToggle = () => {
   this.setState((prevState) => ({
-    isNavigatorVisible: !prevState.isNavigatorVisible,
-  }));
+      isNavigatorVisible: !prevState.isNavigatorVisible
+  }), () => {
+    if (this.state.isNavigatorVisible) {
+      setTimeout(() => {
+        this.initNavigator();
+      }, 250);
+    } else if (this.navigator) {
+      this.navigator.destroy();
+    }
+    // console.log('Navigator Visible: ', this.state.isNavigatorVisible);
+  });
+};
+
+handleOpenAddParticipantDialog = (elementData) => {
+  this.setState({
+    isAddParticipantDialogOpen: true,
+    selectedElementForAddParticipant: elementData
+  });
+};
+
+handleCloseAddParticipantDialog = () => {
+  this.setState({
+    isAddParticipantDialogOpen: false
+  });
+};
+
+handleAddParticipant = ({ participantName, participantRoleName, selectedEntity }) => {
+  if (participantName) {
+    const participant = {
+      ...templates.participant,
+      '@id': `Participants/${participant_counter++}/${participantName}`,
+      'roleName': participantRoleName,
+      'entity': selectedEntity
+    };
+
+    axios.post("/add_participant", {
+      event_id: this.state.selectedElementForAddParticipant['@id'],
+      participant_data: participant
+    })
+    .then(res => {
+      console.log("Response from server: ", res.data);
+      this.props.updateCallback(res.data);
+    })
+    .catch(err => {
+      console.error(err);
+    });
+
+    this.handleCloseAddParticipantDialog();
+  }
+};
+
+handleCloseAddEventDialog = () => {
+  this.setState({ addEventDialogOpen: false });
+};
+
+handleAddEvent = (newEvent) => {
+  console.log("Adding new event: ", newEvent);
+  this.setState({ 
+    addEventDialogOpen: false,
+    event_counter: this.state.event_counter + 1,
+    // ...you may want to add newEvent to your state somehow here
+  });
+};
+
+onSubmitEvent = (newEvent) => {
+  axios.post("/add_event", {
+      ...newEvent,
+      parent_id: this.state.selectedElementForAddEvent
+  })
+  .then(res => {
+      console.log("Response from server: ", res.data);
+      this.props.updateCallback(res.data);
+  })
+  .catch(err => {
+      console.error(err);
+  });
+};
+
+handleOpenAddRelationDialog = (elementData) => {
+  this.setState({
+    addRelationDialogOpen: true,
+    selectedElementForAddRelation: elementData
+  });
+};
+
+handleCloseAddRelationDialog = () => {
+  this.setState({
+    addRelationDialogOpen: false
+  });
+};
+
+handleAddRelation = ({ relationName, wdNode, wdLabel, wdDescription, selectedEntityObject }) => {
+  if (relationName) {
+    const relation = {
+      ...templates.relation,
+      '@id': `Relations/${relation_counter++}/${relationName}`,
+      'name': relationName,
+      'wd_node': wdNode,
+      'wd_label': wdLabel,
+      'wd_description': wdDescription,
+      'relationObject': selectedEntityObject,
+      'relationSubject': this.state.selectedElementForAddRelation['@id'],
+    };
+
+    axios.post("/add_relation", {
+      fromNodeId: this.state.selectedElementForAddRelation['@id'],
+      toNodeId: selectedEntityObject, // Now, toNodeId is set to the selectedEntityObject
+      relation: relation
+    })
+    .then(res => {
+      console.log("Response from server: ", res.data);
+      if (this.props.updateCallback) {
+        this.props.updateCallback(res.data);
+      }
+    })
+    .catch(err => {
+      console.error(err);
+    });
+
+    this.setState({ 
+      addRelationDialogOpen: false,
+      relation_counter: this.state.relation_counter + 1,
+    });
+  }
+};
+
+handleOpenAddEntityDialog = (elementData) => {
+  this.setState({
+    isAddEntityDialogOpen: true,
+    selectedElementForAddEntity: elementData
+  });
+};
+
+handleCloseAddEntityDialog = () => {
+  this.setState({
+    isAddEntityDialogOpen: false
+  });
+};
+
+handleAddEntity = (newEntity) => {
+  console.log("Adding new entity: ", newEntity);
+  axios.post("/add_entity", {
+    event_id: this.state.selectedElementForAddEntity['@id'],
+    entity_data: newEntity
+  })
+  .then(res => {
+    console.log("Response from server: ", res.data);
+    // increment entity_counter in the .then callback
+    this.setState({ entity_counter: this.state.entity_counter + 1 });
+    if (this.props.updateCallback) {
+      this.props.updateCallback(res.data);
+    }
+  })
+  .catch(err => {
+    console.error(err);
+  });
+};
+
+handleOpenAddXORDialog = (elementData) => {
+  this.setState({
+      isAddXORDialogOpen: true,
+      selectedElementForAddXOR: elementData
+  });
+};
+
+handleCloseAddXORDialog = () => {
+  this.setState({
+      isAddXORDialogOpen: false
+  });
+};
+
+handleDeleteEntity = (entityId) => {
+  if (window.confirm(`Are you sure you want to delete ${entityId}?`)) {
+    axios.delete('/delete_entity', { data: { entity_id: entityId } })
+      .then((response) => {
+        console.log(response);
+        // Remove the deleted entity and its participants from the 'allEntities' array
+        const updatedEntities = allEntities.filter(entity => entity['@id'] !== entityId);
+        allEntities = updatedEntities.map(entity => {
+          const updatedParticipants = entity['participant_in'].filter(participant => participant !== entityId);
+          return { ...entity, participant_in: updatedParticipants };
+        });
+        // Update the state with the modified 'allEntities' array
+        this.setState({ allEntities: updatedEntities });
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }
 };
 
 showSidebar(data) {
@@ -269,13 +478,14 @@ removeEntityFromSchemaJson(entityId) {
   }
 
   initNavigator() {
-    this.cy.navigator({
+    this.navigator = this.cy.navigator({
       container: this.navigatorRef.current,
       viewLiveFramerate: 60,
       thumbnailEventFramerate: 60,
-      thumbnailLiveFramerate: false,
-      dblClickDelay: 200,
+      thumbnailLiveFramerate: true,
+      dblClickDelay: 20,
     });
+    this.cy.fit(); // or this.cy.resize();
   }
 
 download(event) {
@@ -292,7 +502,9 @@ download(event) {
 
         componentDidMount() {
           this.cy.ready(() => {
-            this.initNavigator();
+            if (this.state.isNavigatorVisible) {
+              this.initNavigator();
+            }
             // left-click 
             this.cy.on('tap', event => {
                 var eventTarget = event.target;
@@ -388,139 +600,46 @@ download(event) {
                     },
                     hasTrailingDivider: true
                   },
-                {
-                    id: 'add-chapter-event',
-                    content: 'Add Chapter Event',
+                  {
+                    id: 'add-event',
+                    content: 'Add Event',
                     selector: 'node[_shape = "diamond"], node[_type = "gate"]',
                     onClickFunction: (event) => {
-                        const elementData = event.target.data();
-                        this.setState({ selectedElement: elementData });
-                        const eventName = prompt('Enter chapter event name:');
-                        if (eventName) {
-                            const chapterEvent = {
-                                ...templates.chapterEvent,
-                                '@id': `Events/${event_counter++}/${eventName}`,
-                                'name': eventName
-                            };
-                            // console.log("CLICK ADD CHAPTER")
-                            // console.log("\n(CANVAS.JSX) Adding chapter event:\n", chapterEvent);
-                            this.addChapterEvent(chapterEvent);
-                        }
-                      }
-                },
-                {
-                    id: 'add-primitive-event',
-                    content: 'Add Primitive Event',
-                    selector: 'node[_shape = "diamond"], node[_type = "gate"]',
-                    onClickFunction: (event) => {
-                       const elementData = event.target.data();
-                        this.setState({ selectedElement: elementData });
-                        const eventName = prompt('Enter primitive event name:');
-                        if (eventName) {
-                            const primitiveEvent = {
-                                ...templates.primitiveEvent,
-                                '@id': `Events/${event_counter++}/${eventName}`,
-                                'name': eventName
-                            };
-                            // console.log("\n(CANVAS.JSX) Adding primitive event:\n", primitiveEvent);
-                            this.addChapterEvent(primitiveEvent);
-                        }
-
+                      const elementData = event.target.data();
+                      this.setState({ 
+                        selectedElementForAddEvent: elementData, 
+                        addEventDialogOpen: true
+                      });
                     }
-                },
-                {
+                  },
+                  {
                     id : 'add-xor-event',
                     content: 'Add XOR Gate',
                     selector: 'node[_shape = "diamond"], node[_type = "ellipse"]',
                     onClickFunction: (event) => {
-                       const elementData = event.target.data();
-                        this.setState({ selectedElement: elementData });
-                        const eventName = prompt('Enter XOR gate name:');
-                        if (eventName) {
-                            const xorEvent = {
-                                ...templates.xorGate,
-                                '@id': `Events/${event_counter++}/${eventName}`,
-                                'name': eventName
-                            };
-                            // console.log("\n(CANVAS.JSX) Adding XOR event:\n", xorEvent);
-                            this.addChapterEvent(xorEvent);
-                        }
-                    }
-                },
-                {
-                    id: 'add-relation',
-                    content: 'Add Relation',
-                    selector: 'node[_type = "entity"]',
-                    onClickFunction: (event) => {
-                            this.setState({ selectedNodeId: event.target.id() });
-                          
-                            // Wait for the user's next click of a node.
-                            this.cy.one('select', 'node', (event) => {
-                                const selectedNode = event.target;
-                                const selectedNodeId = selectedNode.id();
-                                const name = prompt('Enter relation name:');
-                                const wd_node = prompt('Enter WikiData node:');
-                                const wd_label = prompt('Enter WikiData label:');
-                                const wd_description = prompt('Enter WikiData description:');
-
-                                const relation = {
-                                    ...templates.relation,
-                                    '@id': `Relations/${relation_counter++}/${name}`,
-                                    'name': name,
-                                    'relationSubject': this.state.selectedNodeId,
-                                    'relationObject': selectedNodeId,
-                                    'wd_node': wd_node,
-                                    'wd_label': wd_label,
-                                    'wd_description': wd_description
-                                };
-                          
-                              // Make the backend call to add the outlink.
-                              axios.post('/add_relation', {
-                                fromNodeId: this.state.selectedNodeId,
-                                toNodeId: selectedNodeId,
-                                relation: relation
-                              })
-                                .then((res) => {
-                                  console.log(res.data);
-                                  props.updateCallback(res.data)
-                                })
-                                .catch((err) => {
-                                  console.error(err);
-                            });
-                        });
-                    }
-                },
-                {
-                    id: 'add-participant',
-                    content: 'Add Participant',
-                    selector: 'node[_shape = "ellipse"]',
-                    onClickFunction: (event) => {
                         const elementData = event.target.data();
-                        this.setState({ selectedElement: elementData });
-                        const participantName = prompt('Enter participant name:');
-                        const participantRoleName = prompt('Enter participant roleName:');
-                        const selectedEntity = prompt('Enter an entity:');
-                        if (participantName) {
-                          const participant = {
-                            ...templates.participant,
-                            '@id': `Participants/${participant_counter++}/${participantName}`,
-                            'roleName': participantRoleName,
-                            'entity': selectedEntity
-                          };
-                        
-                          axios.post("/add_participant", {
-                            event_id: elementData['@id'],
-                            participant_data: participant
-                          })
-                          .then(res => {
-                            console.log("Response from server: ", res.data);
-                            props.updateCallback(res.data)
-                          })
-                          .catch(err => {
-                            console.error(err);
-                          });
-                        }
-                    },
+                        this.handleOpenAddXORDialog(elementData);
+                    }
+                },
+                {
+                  id: 'add-relation',
+                  content: 'Add Relation',
+                  selector: 'node[_type = "entity"]',
+                  onClickFunction: (event) => {
+                    this.setState({ 
+                      selectedElementForAddRelation: event.target.data(),
+                      addRelationDialogOpen: true
+                    });
+                  }
+                },
+                {
+                  id: 'add-participant',
+                  content: 'Add Participant',
+                  selector: 'node[_shape = "ellipse"]',
+                  onClickFunction: (event) => {
+                    const elementData = event.target.data();
+                    this.handleOpenAddParticipantDialog(elementData);
+                  },
                 },
                 {
                   id: 'add-entity',
@@ -528,101 +647,75 @@ download(event) {
                   selector: 'node[_shape = "diamond"], node[_shape = "ellipse"]',
                   onClickFunction: (event) => {
                     const elementData = event.target.data();
-                    this.setState({ selectedElement: elementData });
-                    const entityName = prompt('Enter entity name:');
-                    const entityWdNode = prompt('Enter entity wd_node:');
-                    const entityWdLabel = prompt('Enter entity wd_label:');
-                    const entityWdDescription = prompt('Enter entity wd_description:');
-                    if (entityName) {
-                      const entity = {
-                        ...templates.entity,
-                        '@id': `Entities/${entity_counter++}/${entityName}`,
-                        'name': entityName,
-                        'wd_node': entityWdNode,
-                        'wd_label': entityWdLabel,
-                        'wd_description': entityWdDescription,
-                        'event': elementData['@id']
-                      };
-                    
-                      axios.post("/add_entity", {
-                        event_id: elementData['@id'],
-                        entity_data: entity
-                      })
-                      .then(res => {
-                        console.log("Response from server: ", res.data);
-                        props.updateCallback(res.data)
-                      })
-                      .catch(err => {
-                        console.error(err);
-                      });
-                    }
+                    this.handleOpenAddEntityDialog(elementData);
                   },
                   hasTrailingDivider: true
-              },
-              {
-                id: 'view-entities',
-                content: 'View Entities',
-                selector: 'node[_shape = "diamond"], node[_shape = "ellipse"]',
-                onClickFunction: (event) => {
-                  axios.get('/get_all_entities')
-                    .then((response) => {
-                      let allEntities = response.data;
-                      console.log(allEntities);
-              
-                      // Sort entities by the length of 'participant_in' array in descending order
-                      allEntities.sort((a, b) => b['participant_in'].length - a['participant_in'].length);
-              
-                      const dialogContent = (
-                        <div style={{ display: 'inline-block', minWidth: '150vw' }}>
-                          <h2>Global Entity Table</h2>
-                          <table style={{ borderCollapse: 'collapse', width: '100%', margin: '1em', tableLayout: 'auto' }}>
-                            <thead>
-                              <tr style={{ borderBottom: '1px solid black' }}>
-                                <th style={{ padding: '0.5em' }}>Entity Name</th>
-                                <th style={{ padding: '0.5em' }}>WikiData Label</th>
-                                <th style={{ padding: '0.5em' }}>Copy</th>
-                                <th style={{ padding: '0.5em' }}>Entity ID</th>
-                                <th style={{ padding: '0.5em' }}>Created In</th>
-                                <th style={{ padding: '0.5em' }}>Participant In</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                            {allEntities.map((entity) => (
-                              <tr key={entity['@id']} style={{ borderBottom: '1px solid black' }}>
-                                <td style={{ padding: '0.5em' }}>{entity['name']}</td>
-                                <td style={{ padding: '0.5em' }}>{entity['wd_label']}</td>
-                                <td style={{ padding: '0.5em' }}>
-                                  <IconButton
-                                    edge="end"
-                                    color="inherit"
-                                    onClick={() => {
-                                      navigator.clipboard.writeText(entity['@id']).then(
-                                        () => console.log('Copied to clipboard:', entity['@id']),
-                                        (err) => console.error('Could not copy text:', err)
-                                      );
-                                    }}
-                                  >
-                                    <FileCopyIcon />
-                                  </IconButton>
-                                </td>
-                                <td style={{ padding: '0.5em' }}>{entity['@id']}</td>
-                                <td style={{ padding: '0.5em' }}>{entity['created_in'].join(', ')}</td>
-                                <td style={{ padding: '0.5em' }}>{entity['participant_in'].join(', ')}</td>
-                                
-                              </tr>
-                            ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      );
-              
-                      this.setState({ dialogOpen: true, dialogContent: dialogContent });
-                    })
-                    .catch((error) => {
-                      console.error(error);
-                    });
                 },
-              }
+                {
+                  id: 'view-entities',
+                  content: 'View Entities',
+                  selector: 'node[_shape = "diamond"], node[_shape = "ellipse"]',
+                  onClickFunction: (event) => {
+                    axios
+                      .get('/get_all_entities')
+                      .then((response) => {
+                        let allEntities = response.data;
+                        console.log(allEntities);
+                    
+                        // Sort entities by the length of 'participant_in' array in descending order
+                        allEntities.sort((a, b) => b['participant_in'].length - a['participant_in'].length);
+                    
+                        const dialogContent = (
+                          <div style={{ display: 'flex', flexDirection: 'column', width: '100%', maxHeight: '90vh' }}>
+                            <div className="draggable-handle" style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '1em', borderBottom: '1px solid #CCC' }}>
+                              <Typography variant="h5" style={{ flexGrow: 1, color: '#1565c0', margin: '1em 0' }}>Global Entity Table</Typography>
+                              <IconButton onClick={() => this.setState({ dialogOpen: false })} style={{ margin: '0.5em' }}>
+                                <CloseIcon />
+                              </IconButton>
+                            </div>
+                            <div style={{ overflow: 'auto', maxHeight: '80vh' }}>
+                              <table style={{ borderCollapse: 'collapse', width: '100%', margin: '1em 0', tableLayout: 'auto' }}>
+                                <thead>
+                                  <tr style={{ borderBottom: '1px solid black' }}>
+                                    <th style={{ padding: '0.5em', color: '#1565c0', whiteSpace: 'nowrap', position: 'sticky', top: 0, background: '#FFF' }}>Delete</th>
+                                    <th style={{ padding: '0.5em', color: '#1565c0', whiteSpace: 'nowrap', position: 'sticky', top: 0, background: '#FFF' }}>Entity Name</th>
+                                    <th style={{ padding: '0.5em', color: '#1565c0', whiteSpace: 'nowrap', position: 'sticky', top: 0, background: '#FFF' }}>WikiData Label</th>
+                                    <th style={{ padding: '0.5em', color: '#1565c0', whiteSpace: 'nowrap', position: 'sticky', top: 0, background: '#FFF' }}>Entity ID</th>
+                                    <th style={{ padding: '0.5em', color: '#1565c0', whiteSpace: 'nowrap', position: 'sticky', top: 0, background: '#FFF' }}>Created In</th>
+                                    <th style={{ padding: '0.5em', color: '#1565c0', whiteSpace: 'nowrap', position: 'sticky', top: 0, background: '#FFF' }}>Participant In</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {allEntities.map((entity) => (
+                                    <tr key={entity['@id']} style={{ borderBottom: '1px solid black' }}>
+                                      <td style={{ padding: '0.5em' }}>
+                                        <button
+                                          style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                                          onClick={() => this.handleDeleteEntity(entity['@id'])}
+                                        >
+                                          <DeleteIcon style={{ color: '#1565c0' }} />
+                                        </button>
+                                      </td>
+                                      <td style={{ padding: '0.5em' }}>{entity['name']}</td>
+                                      <td style={{ padding: '0.5em' }}>{entity['wd_label']}</td>
+                                      <td style={{ padding: '0.5em' }}>{entity['@id']}</td>
+                                      <td style={{ padding: '0.5em' }}>{entity['created_in'].join(', ')}</td>
+                                      <td style={{ padding: '0.5em' }}>{entity['participant_in'].join(', ')}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        );
+                    
+                        this.setState({ dialogOpen: true, dialogContent: dialogContent });
+                      })
+                      .catch((error) => {
+                        console.error(error);
+                      });
+                  },
+                }
             ],
         });
     });
@@ -634,13 +727,18 @@ componentDidUpdate(prevProps) {
     }
 
     if (this.props.selectedElement !== prevProps.selectedElement) {
-        // console.log('selectedElement (componentDidUpdate):', this.props.selectedElement);
-        if (this.props.selectedElement) {
-            this.setState({ isGraphEditOpen: true });
-        } else {
-            this.setState({ isGraphEditOpen: false });
-        }
-    }
+      if (this.props.selectedElement) {
+          this.setState({ 
+              isGraphEditOpen: true,
+              selectedElementForGraphEdit: this.props.selectedElement
+          });
+      } else {
+          this.setState({ 
+              isGraphEditOpen: false,
+              selectedElementForGraphEdit: null
+          });
+      }
+  }
 }
 
 render() {
@@ -672,6 +770,7 @@ render() {
       height: "150px",
       display: this.state.isNavigatorVisible ? "block" : "none",
     };
+    // console.log('Navigator Style:', navigatorStyle);
 
     return (
         <div className={this.props.className} style={{ width: 'max-content', display: 'inline-flex' }}>
@@ -681,7 +780,7 @@ render() {
                 style={style}
                 stylesheet={CyStyle.stylesheet}
                 cy={(cy) => { this.cy = cy }}
-                maxZoom={3} minZoom={0.77}
+                maxZoom={3} minZoom={0.37}
             />
             <Dialog
               maxWidth='100vw'
@@ -696,10 +795,38 @@ render() {
               {this.state.dialogContent}
             </Dialog>
             <div style={buttonContainer}>
-                <RefreshIcon type='button' color="action" fontSize='large' onClick={this.reloadCanvas} />
-                <MapIcon type="button" color="action" fontSize="large" onClick={this.handleNavigatorToggle} />
-                <AspectRatioIcon type='button' color="action" fontSize='large' onClick={this.fitCanvas} />
-                <SaveIcon className="button" type="button" color="action" onClick={this.download} style={{ fontSize: '32px' }}/>
+                <Tooltip title="Refresh">
+                    <RefreshIcon
+                        type='button'
+                        color="action"
+                        fontSize='large'
+                        onClick={this.reloadCanvas}
+                    />
+                </Tooltip>
+                <Tooltip title="Toggle Navigator">
+                    <MapIcon
+                        type="button"
+                        color="action"
+                        fontSize="large"
+                        onClick={this.handleNavigatorToggle}
+                    />
+                </Tooltip>
+                <Tooltip title="Adjust Aspect Ratio">
+                    <AspectRatioIcon
+                        type='button'
+                        color="action"
+                        fontSize='large'
+                        onClick={this.fitCanvas}
+                    />
+                </Tooltip>
+                <Tooltip title="Download Image">
+                    <SaveIcon
+                        type="button"
+                        color="action"
+                        fontSize="large"
+                        onClick={this.download}
+                    />
+                </Tooltip>
                 <a style={{ display: "none" }}
                     download={this.state.fileName}
                     href={this.state.downloadUrl}
@@ -715,6 +842,37 @@ render() {
                 handleSubmit={this.handleSubmit}
                 sideEditorCallback={this.props.sideEditorCallback}
                 addChapterEvent={this.props.addChapterEvent}
+                />
+            <AddParticipantDialog
+                open={this.state.isAddParticipantDialogOpen}
+                onClose={this.handleCloseAddParticipantDialog}
+                onSubmit={this.handleAddParticipant}
+                selectedElement={this.state.selectedElementForAddParticipant}
+                />
+            <AddEventDialog 
+                open={this.state.addEventDialogOpen} 
+                onClose={this.handleCloseAddEventDialog}
+                onSubmit={this.onSubmitEvent}
+                selectedElement={this.state.selectedElementForAddEvent}
+                />
+            <AddRelationDialog 
+                open={this.state.addRelationDialogOpen} 
+                onClose={this.handleCloseAddRelationDialog}
+                onSubmit={this.handleAddRelation}
+                selectedElement={this.state.selectedElementForAddRelation}
+                />
+            <AddEntityDialog 
+                open={this.state.isAddEntityDialogOpen} 
+                onClose={this.handleCloseAddEntityDialog}
+                onSubmit={this.handleAddEntity}
+                selectedElement={this.state.selectedElementForAddEntity}
+                entityCounter={this.state.entity_counter}
+                />
+            <AddXORDialog
+                open={this.state.isAddXORDialogOpen}
+                handleClose={this.handleCloseAddXORDialog}
+                selectedElement={this.state.selectedElementForAddXOR}
+                updateCallback={this.props.updateCallback}
                 />
             </div>
         );

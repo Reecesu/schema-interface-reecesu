@@ -276,6 +276,8 @@ def get_nodes_and_edges(schema_json):
                 entity_id = participant['entity']
                 if entity_id == '':
                     entity_id = "Entities/20000/"
+                elif not entity_id.startswith("Entities/"):
+                    entity_id = "Entities/" + entity_id
                 edge = create_edge(event_id, entity_id, _label, _edge_type='step_participant')
                 edge['data']['@id'] = participant['@id']
                 edges.append(edge)
@@ -320,7 +322,7 @@ def get_nodes_and_edges(schema_json):
     # find root node(s)
     parentless_edge = {}
     for edge in edges:
-        if edge['data']['source'] not in parentless_edge:
+        if 'source' in edge['data'] and edge['data']['source'] in nodes:
             if nodes[edge['data']['source']]['data']['_type'] == 'entity':
                 parentless_edge[edge['data']['source']] = False
             else:
@@ -541,17 +543,16 @@ def add_entity_to_event():
     event_id = data.get('event_id')
     entity_data = data.get('entity_data')
 
-    # Remove the 'event' and 'entity' values from entity_data
-    del entity_data['event']
-    print('entity_data', entity_data)
-
     # Find the event with the given ID and add the entity to its entities list
     for event in schema_json['events']:
         if event['@id'] == event_id:
+            # Ensure the 'entities' key exists in the event dictionary
+            if 'entities' not in event:
+                event['entities'] = []
             event['entities'].append(entity_data)
     
     # Print the updated schema for confirmation
-    print(json.dumps(schema_json, indent=2))
+    # print(json.dumps(schema_json, indent=2))
     
     # Return a success response
     return schema_json
@@ -568,7 +569,7 @@ def add_participant_to_event():
             event['participants'].append(participant_data)
     
     # Print the updated schema for confirmation
-    print(json.dumps(schema_json, indent=2))
+    # print(json.dumps(schema_json, indent=2))
     
     # Return a success response
     return schema_json
@@ -691,6 +692,38 @@ def upload():
         'parsedSchema': parsed_schema,
         'name': schema_name,
         'schemaJson': schema_json
+    })
+
+@app.route('/delete_entity', methods=['DELETE'])
+def delete_entity():
+    entity_id = request.json.get('entity_id')
+
+    # Remove the entity from the schema_json['events']['entities']
+    for event in schema_json['events']:
+        if 'entities' in event:
+            event['entities'] = [entity for entity in event['entities'] if entity.get('@id') != entity_id]
+
+    # Remove the entity from the participants' 'entity' field
+    for event in schema_json['events']:
+        if 'participants' in event:
+            event['participants'] = [
+                participant for participant in event['participants'] if participant.get('entity') != entity_id
+            ]
+            
+    # Remove relations with matching relationSubject or relationObject
+    for event in schema_json['events']:
+        if 'relations' in event:
+            event['relations'] = [
+                relation for relation in event['relations']
+                if relation.get('relationSubject') != entity_id and relation.get('relationObject') != entity_id
+            ]
+    
+    # Reload the schema to update the nodes and edges
+    nodes, edges = get_nodes_and_edges(schema_json)
+    
+    return jsonify({
+        'nodes': nodes,
+        'edges': edges
     })
 
 # TODO: get_subtree_or_update_node not accessed

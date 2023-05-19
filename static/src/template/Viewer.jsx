@@ -4,6 +4,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import IconButton from '@mui/material/IconButton';
 import DownloadIcon from '@mui/icons-material/CloudDownload';
+import Tooltip from '@mui/material/Tooltip';
 
 import axios from 'axios';
 import UploadModal from './UploadModal';
@@ -154,7 +155,9 @@ class Viewer extends Component {
                     <ToastContainer theme="colored" />
                     <UploadModal buttonLabel="Upload Schema" parentCallback={this.callbackFunction} />
                     <IconButton aria-label="download" disabled={!this.state.isUpload} color="primary" onClick={this.download}>
+                    <Tooltip title="Download JSON File">
                         <DownloadIcon />
+                    </Tooltip>
                     </IconButton>
                     <a style={{ display: "none" }}
                         download={this.state.fileName}

@@ -111,7 +111,7 @@
             "participants": [
                 {
                     "@id": "Participants/20000/",
-                    "roleName": "consult_XPO",
+                    "roleName": "A1_ppt_disagreement",
                     "entity": "Entities/20000/"
                 },
                 {
@@ -139,12 +139,12 @@
             "relations": [
                 {
                     "@id": "Relations/30000/",
-                    "name": "relation",
-                    "relationSubject": "Entities/20000/",
-                    "relationObject": "Entities/20001/",
+                    "name": "partially coincident with",
+                    "relationSubject": "Entities/20000/government",
+                    "relationObject": "Entities/20001/military",
                     "wd_node": "wdt:P1234567",
-                    "wd_label": "",
-                    "wd_description": ""
+                    "wd_label": "partialy...",
+                    "wd_description": "they are related..."
                 }
             ],
             "optional": false,

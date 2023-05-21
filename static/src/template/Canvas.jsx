@@ -1,5 +1,6 @@
 import React from 'react';
 import axios from 'axios';
+import { ToastContainer, toast } from 'react-toastify';
 
 import templates from './templates';
 import GraphEdit from './GraphEdit';
@@ -128,7 +129,7 @@ handleAddParticipant = ({ participantName, participantRoleName, selectedEntity }
   if (participantName) {
     const participant = {
       ...templates.participant,
-      '@id': `Participants/${participant_counter++}/${participantName}`,
+      '@id': `Participants/${this.state.participant_counter++}/${participantName}`,
       'roleName': participantRoleName,
       'entity': selectedEntity
     };
@@ -139,10 +140,27 @@ handleAddParticipant = ({ participantName, participantRoleName, selectedEntity }
     })
     .then(res => {
       console.log("Response from server: ", res.data);
-      this.props.updateCallback(res.data);
+
+      // Increment participant_counter in the .then callback
+      this.setState({ participant_counter: this.state.participant_counter + 1 });
+
+      const newSchema = res.data;
+      this.setState({
+        canvasElements: CytoscapeComponent.normalizeElements(newSchema.events)
+      }, () => this.reloadCanvas());  // refresh the graph right after updating the state
+
+      if (this.props.callbackFunction) {
+        this.props.callbackFunction(res.data);
+      }
+
+      // Display success toast
+      toast.success('Participant added successfully!');
     })
     .catch(err => {
       console.error(err);
+
+      // Display error toast
+      toast.error('Failed to add participant.');
     });
 
     this.handleCloseAddParticipantDialog();
@@ -169,10 +187,22 @@ onSubmitEvent = (newEvent) => {
   })
   .then(res => {
       console.log("Response from server: ", res.data);
-      this.props.updateCallback(res.data);
+      
+      // Update the state with the new schema
+      const newSchema = res.data;
+      this.setState({
+        canvasElements: CytoscapeComponent.normalizeElements(newSchema.events)
+      }, () => this.reloadCanvas());  // refresh the graph right after updating the state
+
+      if (this.props.callbackFunction) {
+        this.props.callbackFunction(res.data);
+      }
+
+      toast.success('Event added successfully!'); // Display success toast
   })
   .catch(err => {
       console.error(err);
+      toast.error('Failed to add event.'); // Display error toast
   });
 };
 
@@ -209,8 +239,8 @@ handleAddRelation = ({ relationName, wdNode, wdLabel, wdDescription, selectedEnt
     })
     .then(res => {
       console.log("Response from server: ", res.data);
-      if (this.props.updateCallback) {
-        this.props.updateCallback(res.data);
+      if (this.props.callbackFunction) {
+        this.props.callbackFunction(res.data);
       }
     })
     .catch(err => {
@@ -247,12 +277,26 @@ handleAddEntity = (newEntity) => {
     console.log("Response from server: ", res.data);
     // increment entity_counter in the .then callback
     this.setState({ entity_counter: this.state.entity_counter + 1 });
-    if (this.props.updateCallback) {
-      this.props.updateCallback(res.data);
+
+    // Update the state with the new schema
+    // This assumes that `canvasElements` represents the current schema
+    const newSchema = res.data;
+    this.setState({
+      canvasElements: CytoscapeComponent.normalizeElements(newSchema.events)
+    }, () => this.reloadCanvas());  // refresh the graph right after updating the state
+
+    if (this.props.callbackFunction) {
+      this.props.callbackFunction(res.data);
     }
+
+    // Display success toast
+    toast.success('Entity added successfully!');
   })
   .catch(err => {
     console.error(err);
+
+    // Display error toast
+    toast.error('Failed to add entity.');
   });
 };
 
@@ -872,7 +916,7 @@ render() {
                 open={this.state.isAddXORDialogOpen}
                 handleClose={this.handleCloseAddXORDialog}
                 selectedElement={this.state.selectedElementForAddXOR}
-                updateCallback={this.props.updateCallback}
+                callbackFunction={this.props.callbackFunction}
                 />
             </div>
         );

@@ -22,7 +22,7 @@ function AddEntityDialog({ open, onClose, onSubmit, selectedElementForAddEntity,
       alert("Entity name must be filled out before submitting.");
       return;
     }
-
+  
     const template = templates['entity'];
     console.log("Submitting: ", { entityName, entityWdNode, entityWdLabel, entityWdDescription });
     const newEntity = {
@@ -33,7 +33,10 @@ function AddEntityDialog({ open, onClose, onSubmit, selectedElementForAddEntity,
       'wd_label': entityWdLabel,
       'wd_description': entityWdDescription
     };
-    onSubmit(newEntity);
+    
+    onSubmit(newEntity); // Calling the callback function passed to this component
+    onClose(); // Closing the dialog
+  
     setEntityName('');
     setEntityWdNode('');
     setEntityWdLabel('');

@@ -23,35 +23,6 @@ schema_key_dict = {
     'relation': ['name', 'wd_node', 'wd_label', 'modality', 'wd_description', 'ta1ref', 'relationSubject', 'relationObject', 'relationPredicate']
 }
 
-# # def transform_version()
-
-# def is_ta2_format(data):
-#     return '@context' in data and 'instances' in data
-
-# def convert_ta2_to_ta1_format(ta2):
-#     ta1 = {
-#         'events': [],
-#         'entities': [],
-#         'relations': [],
-#     }
-
-#     if ta2['instances'] and len(ta2['instances']) > 0:
-#         instance = ta2['instances'][0]
-
-#         for event in instance['events']:
-#             new_event = event.copy()
-#             if 'entities' in event:
-#                 for entity in event['entities']:
-#                     ta1['entities'].append(entity)
-#                 del new_event['entities']
-#             if 'relations' in event:
-#                 for relation in event['relations']:
-#                     ta1['relations'].append(relation)
-#                 del new_event['relations']
-#             ta1['events'].append(new_event)
-
-#     return ta1
-
 def create_node(_id, _label, _type, _shape=''):
     """Creates a node.
 

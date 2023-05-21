@@ -11,7 +11,7 @@ function PaperComponent(props) {
   );
 }
 
-function AddParticipantDialog({ open, onClose, onSubmit }) {
+function AddParticipantDialog({ open, onClose, onSubmit, selectedElement }) {
   const [participantName, setParticipantName] = useState('');
   const [participantRoleName, setParticipantRoleName] = useState('');
   const [selectedEntity, setSelectedEntity] = useState('');
@@ -19,7 +19,7 @@ function AddParticipantDialog({ open, onClose, onSubmit }) {
 
   useEffect(() => {
     fetchAllEntities();
-  }, []);
+  }, [selectedElement]);
 
   const fetchAllEntities = () => {
     axios.get('/get_all_entities')

@@ -23,7 +23,7 @@ function AddEventDialog({ open, onClose, onSubmit }) {
       alert("Event name must be filled out before submitting.");
       return;
     }
-
+  
     const eventType = isChapterEvent ? 'chapterEvent' : 'primitiveEvent';
     const template = templates[eventType];
     console.log("Submitting: ", { eventName, eventType });
@@ -35,6 +35,7 @@ function AddEventDialog({ open, onClose, onSubmit }) {
     onSubmit(newEvent);
     setEventName('');
     setIsChapterEvent(false);
+    onClose();
   };
 
   return (

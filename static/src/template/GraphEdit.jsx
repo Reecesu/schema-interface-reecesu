@@ -197,7 +197,7 @@ const GraphEdit = React.forwardRef((props, ref) => {
         axios.post("/add_event", data.selectedElement)
           .then(res => {
             console.log("Response from server: ", res.data);
-            props.updateCallback(res.data);
+            props.callbackFunction(res.data);
           })
           .catch(err => {
             console.error(err);
@@ -274,7 +274,7 @@ const GraphEdit = React.forwardRef((props, ref) => {
                 if (val && val.length > 0) {
                   return (
                     <Box key={key}>
-                      <Typography variant="h10" className={classes.header}>{_.capitalize(key)}</Typography>
+                      <Typography className={classes.header}>{_.capitalize(key)}</Typography>
                       <Typography>{val.map(v => (v["@id"] || v["name"]) ? (v["name"] || data.entityNames[v["@id"]] || data.eventNames[v["@id"]] || v["@id"]) : v).join(", ")}</Typography>
                     </Box>
                   );

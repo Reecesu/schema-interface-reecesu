@@ -81,7 +81,6 @@ constructor(props) {
     };
     this.state.topTree = treeData;
 
-    this.showSidebar = this.showSidebar.bind(this);
     this.showSubTree = this.showSubTree.bind(this);
     this.removeSubTree = this.removeSubTree.bind(this);
     this.runLayout = this.runLayout.bind(this);
@@ -288,10 +287,6 @@ handleDeleteEntity = (entityId) => {
       });
   }
 };
-
-showSidebar(data) {
-    this.props.sidebarCallback(data);
-}
 
 saveGraphState() {
     this.graphHistory.push(this.cy.json());
@@ -840,7 +835,6 @@ render() {
                 isOpen={this.state.isGraphEditOpen}
                 handleOpen={this.handleOpen}
                 handleSubmit={this.handleSubmit}
-                sideEditorCallback={this.props.sideEditorCallback}
                 addChapterEvent={this.props.addChapterEvent}
                 />
             <AddParticipantDialog

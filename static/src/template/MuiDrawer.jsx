@@ -6,10 +6,6 @@ import JsonEdit from './JsonEdit';
 
 const MuiDrawer = (props) => {
   const theme = useTheme();
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const handleDrawerToggle = () => {
-    setDrawerOpen(!drawerOpen);
-  };
 
   const handleJsonEditCallback = (json) => {
     console.log('JSON passed to MuiDrawer:', json);

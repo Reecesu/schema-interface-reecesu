@@ -122,11 +122,15 @@ export default function App() {
             </IconButton>
           </Toolbar>
         </AppBar>
-        <MuiDrawer open={drawerOpen} handleToggle={handleDrawerToggle} schemaJson={schemaJson} parentCallback={handleJsonEditCallback} />
       </ThemeProvider>
       <Routes>
         <Route exact path="/" element={<Home />} />
-        <Route exact path="/viewer" element={<Viewer schemaJson={schemaJson} parentCallback={handleJsonEditCallback} />} />
+        <Route exact path="/viewer"
+          element={<Viewer schemaJson={schemaJson}
+            parentCallback={handleJsonEditCallback} 
+            handleToggle={handleDrawerToggle}
+            drawerOpen={drawerOpen}/>}
+        />
       </Routes>
     </Router>
   );

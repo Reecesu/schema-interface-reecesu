@@ -11,6 +11,17 @@ a {
   .menu a:hover {
     color: #c0dbff;
   }
+
+  .my-editor {
+    width: 700px;
+    /* height: 400px; */
+    display: flex;
+  }
+
+  .vanilla-jsoneditor-react {
+    display: flex;
+    flex: 1;
+  }
   
   .Index {
     text-align: center;
@@ -19,7 +30,7 @@ a {
   #viewer {
     width: 99vw;
   }
-  
+
   #viewer .container {
     display: flex;
     align-items: center;
@@ -41,12 +52,44 @@ a {
   
   .canvas-shrunk {
     margin: 0 1vw;
-    width: 54vw !important;
+    width: 100vw !important;
   }
   
   .canvas-wide {
     margin: 0 1vw;
-    width: 67vw !important;
+    width: 98vw !important;
+  }
+
+  /*Ovveride Navigator border and background:*/
+  .cytoscape-navigator {
+    border: 2px solid #bebebe !important;
+    background: white !important;
+    height: 25vh !important;
+    width: 25vw !important;
+    margin-bottom: 24px;
+    margin-right: 45px;
+    z-index: 1;
+  }
+
+  /*Add border to View container:*/
+  .cytoscape-navigator .cytoscape-navigatorView {
+    border: 2px solid #124191;
+    background: transparent;
+  }
+
+  /*Ovveride overlay container when mouse is over Navigator*/
+  .cytoscape-navigator:hover .cytoscape-navigatorOverlay {
+    border: 2px solid #124191;
+    background: transparent;
+  }
+
+  /*Ovveride view's container when mouse is over view*/
+  .cytoscape-navigator.mouseover-view .cytoscape-navigatorView {
+    background-color: rgba(18, 65, 145, 0.3);
+  }
+
+  .dialog-container {
+    z-index: 1000;
   }
   
   .sidebar-open {

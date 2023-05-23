@@ -56,9 +56,23 @@ export default class JSONEdit extends Component {
                     title: 'Insert Participant',
                     field: '',
                     value: {
-                        '@id': 'Participants/20000/',
+                        '@id': '',
                         'roleName': 'consult_XPO',
-                        'entity': 'Entities/00001/'
+                        'entity': ''
+                    }
+                },
+                {
+                    text: 'Property',
+                    title: 'Insert Property',
+                    field: '',
+                    value: {
+                        '@id': '',
+                        'name': '',
+                        'wd_node': '',
+                        'wd_label': '',
+                        'wd_description': '',
+                        'time_date': '',
+                        'value': ''
                     }
                 },
                 {
@@ -66,10 +80,10 @@ export default class JSONEdit extends Component {
                     title: 'Insert Event',
                     field: '',
                     value: {
-                        '@id': 'Events/10000/',
+                        '@id': '',
                         'name': '',
                         'description': '',
-                        'wd_node': ['wd:Q1234567', 'wdt:P1234567'],
+                        'wd_node': '',
                         'wd_label': '',
                         'wd_description': '',
                         'isSchema': false,
@@ -89,11 +103,11 @@ export default class JSONEdit extends Component {
                     title: 'Insert Entity',
                     field: '',
                     value: {
-                        '@id': 'Entities/20000/',
+                        '@id': '',
                         'name': '',
-                        'wd_node': 'wd:Q1234567',
+                        'wd_node': '',
                         'wd_label': '',
-                        'wd_description': ''                     
+                        'wd_description': ''
                     }
                 },
                 {
@@ -101,13 +115,13 @@ export default class JSONEdit extends Component {
                     title: 'Insert Relation',
                     field: '',
                     value: {
-                        '@id': 'Relations/30000/',
+                        '@id': '',
                         'name': '',
-                        'relationSubject': 'Entities/20000/',
-                        'relationObject': 'Entities/20001/',
-                        'wd_node': 'wdt:P1234567',
+                        'relationSubject': '',
+                        'relationObject': '',
+                        'wd_node': '',
                         'wd_label': '',
-                        'wd_description': ''                   
+                        'wd_description': ''
                     }
                 },
                 {
@@ -115,10 +129,10 @@ export default class JSONEdit extends Component {
                     title: 'Insert Container',
                     field: '',
                     value: {
-                        '@id': 'Events/10000/Container:',
-                        'name': 'Event outlinks',
-                        'comment': 'container node',
-                        'isSchema': false,
+                        '@id': '',
+                        'name': '',
+                        'comment': '',
+                        'isSchema': true,
                         'optional': false,
                         'children_gate': 'xor',
                         'children': [],
@@ -130,13 +144,13 @@ export default class JSONEdit extends Component {
                     title: 'Insert Container Event',
                     field: '',
                     value: {
-                        '@id': 'Events/10000/Container:',
+                        '@id': '',
                         'name': '',
                         'description': '',
-                        'wd_node': ['wd:Q1234567', 'wdt:P1234567'],
+                        'wd_node': '',
                         'wd_label': '',
                         'wd_description': '',
-                        'isSchema': false,
+                        'isSchema': true,
                         'repeatable': false,
                         'optional': false,
                         'children_gate': 'or',
@@ -148,7 +162,6 @@ export default class JSONEdit extends Component {
                         'relations': [],
                         'importance': [],
                         'likelihood': []
-                        
                     }
                 }
             ]
@@ -156,6 +169,7 @@ export default class JSONEdit extends Component {
 
         this.jsoneditor = new JSONEditor(this.container, options);
         this.jsoneditor.set(this.props.schemaJson);
+        // console.log('Data received in JSONEdit: ', this.props.schemaJson);
 
     }
 
@@ -166,6 +180,7 @@ export default class JSONEdit extends Component {
     }
 
     componentDidUpdate() {
+        console.log('schemaJson prop in JsonEdit:', this.props.schemaJson);
         this.jsoneditor.update(this.props.schemaJson);
     }
 

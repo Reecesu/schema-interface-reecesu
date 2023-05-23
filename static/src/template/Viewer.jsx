@@ -4,12 +4,12 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import IconButton from '@mui/material/IconButton';
 import DownloadIcon from '@mui/icons-material/CloudDownload';
+import Tooltip from '@mui/material/Tooltip';
 
 import axios from 'axios';
 import UploadModal from './UploadModal';
+import MuiDrawer from './MuiDrawer';
 import Canvas from './Canvas';
-import SideEditor from './SideEditor';
-import JsonEdit from './JsonEdit';
 
 /* Viewer page for the schema interface. */
 class Viewer extends Component {
@@ -30,8 +30,6 @@ class Viewer extends Component {
 
         this.callbackFunction = this.callbackFunction.bind(this);
         this.jsonEditorCallback = this.jsonEditorCallback.bind(this);
-        this.sidebarCallback = this.sidebarCallback.bind(this);
-        this.sideEditorCallback = this.sideEditorCallback.bind(this);
         this.download = this.download.bind(this);
 
     }
@@ -44,6 +42,10 @@ class Viewer extends Component {
             schemaJson: response.schemaJson,
             isUpload: true
         });
+    }
+
+    callbackFromDrawer = (showJsonEdit) => {
+        this.setState({ showJsonEdit });
     }
 
     download(event) {
@@ -84,41 +86,10 @@ class Viewer extends Component {
             });
     }
 
-    sidebarCallback(data) {
-        /* Opens / closes the sidebar */
-        if (isEmpty(data)) {
-            this.setState({
-                isOpen: false,
-                nodeData: data
-            });
-        } else {
-            this.setState({
-                isOpen: true,
-                nodeData: data
-            });
-        }
-    }
-
-    sideEditorCallback(data) {
-        /* Handles changes through the sidebar */
-        axios.post("/node", data)
-            .then(res => {
-                this.jsonEditorCallback(res.data);
-            })
-            .catch(err => {
-                let error = err.response.data;
-                let error_title = error.slice(error.indexOf("<title>") + 7, error.lastIndexOf("</title>"));
-                let error_notif = error_title.slice(0, error_title.indexOf("//"));
-                toast.error(error_notif);
-                return false;
-            });
-    }
-
     render() {
         let canvas = "";
         let schemaHeading = "";
-        let jsonEdit = "";
-        let sidebarClassName = this.state.isOpen ? "sidebar-open" : "sidebar-closed";
+        let muiDrawer = "";
         let canvasClassName = this.state.isOpen ? "canvas-shrunk" : "canvas-wide";
 
         // a schema exists
@@ -131,15 +102,14 @@ class Viewer extends Component {
             // graph (cytoscape)
             canvas = <Canvas id="canvas"
                 elements={this.state.schemaResponse}
-                sidebarCallback={this.sidebarCallback}
                 className={canvasClassName}
             />;
 
-            jsonEdit = <JsonEdit
-                style={{ width: 'inherit', height: '75vh' }}
-                schemaJson={this.state.schemaJson}
-                parentCallback={this.jsonEditorCallback}
-            />
+            muiDrawer = <MuiDrawer
+                open={this.props.drawerOpen}
+                handleToggle={this.props.handleToggle}
+                schemaJson={this.state.schemaJson} 
+            />;
 
         }
 
@@ -149,7 +119,9 @@ class Viewer extends Component {
                     <ToastContainer theme="colored" />
                     <UploadModal buttonLabel="Upload Schema" parentCallback={this.callbackFunction} />
                     <IconButton aria-label="download" disabled={!this.state.isUpload} color="primary" onClick={this.download}>
-                        <DownloadIcon />
+                        <Tooltip title="Download JSON File">
+                            <DownloadIcon />
+                        </Tooltip>
                     </IconButton>
                     <a style={{ display: "none" }}
                         download={this.state.fileName}
@@ -159,13 +131,9 @@ class Viewer extends Component {
                 </div>
                 <div className="row">{schemaHeading}</div>
                 <div style={{ display: 'inline-flex' }}>
-                    <SideEditor
-                        data={this.state.nodeData}
-                        isOpen={this.state.isOpen}
-                        sideEditorCallback={this.sideEditorCallback}
-                        className={sidebarClassName} />
+                    {/* {console.log("Testing from Viewer.jsx", this.state.schemaJson)} */}
+                    {muiDrawer}
                     {canvas}
-                    {jsonEdit}
                 </div>
             </div>
         )

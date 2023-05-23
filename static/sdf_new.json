@@ -1,0 +1,165 @@
+{
+    "@id": "",
+    "sdfVersion": "",
+    "version": "",
+    "events": [
+        {
+            "@id": "",
+            "name": "",
+            "description": "",
+            "wd_node": "",
+            "wd_label": "",
+            "wd_description": "",
+            "isSchema": true,
+            "repeatable": false,
+            "children_gate": "",
+            "outlinks": [],
+            "participants": [],
+            "children": [],
+            "entities": [],
+            "relations": [],
+            "importance": [],
+            "likelihood": []
+        },
+        {
+            "@id": "",
+            "name": "",
+            "description": "",
+            "wd_node": [],
+            "wd_label": "",
+            "wd_description": "",
+            "isSchema": true,
+            "repeatable": false,
+            "children_gate": "",
+            "outlinks": [],
+            "participants": [],
+            "children": [],
+            "entities": [],
+            "relations": [],
+            "optional": false,
+            "modality": [],
+            "importance": [],
+            "likelihood": []
+        },
+        {
+            "@id": "",
+            "name": "",
+            "description": "",
+            "wd_node": [],
+            "wd_label": "",
+            "wd_description": "",
+            "isSchema": true,
+            "repeatable": false,
+            "children_gate": "",
+            "outlinks": [],
+            "participants": [],
+            "children": [],
+            "entities": [],
+            "relations": [],
+            "optional": true,
+            "modality": [],
+            "importance": [],
+            "likelihood": []
+        },
+        {
+            "@id": "",
+            "name": "",
+            "isSchema": false,
+            "outlinks": [],
+            "children_gate": "",
+            "children": [],
+            "optional": false,
+            "comment": ""
+        },
+        {
+            "@id": "",
+            "name": "",
+            "description": "",
+            "wd_node": [],
+            "wd_label": "",
+            "wd_description": "",
+            "isSchema": false,
+            "repeatable": false,
+            "outlinks": [],
+            "participants": [
+                {
+                    "@id": "",
+                    "roleName": "",
+                    "entity": ""
+                },
+                {
+                    "@id": "",
+                    "roleName": "",
+                    "entity": ""
+                }
+            ],
+            "entities": [
+                {
+                    "@id": "",
+                    "name": "",
+                    "wd_node": "",
+                    "wd_label": "",
+                    "wd_description": ""
+                },
+                {
+                    "@id": "",
+                    "name": "",
+                    "wd_node": "",
+                    "wd_label": "",
+                    "wd_description": ""
+                }
+            ],
+            "relations": [
+                {
+                    "@id": "",
+                    "name": "",
+                    "relationSubject": "",
+                    "relationObject": "",
+                    "wd_node": "",
+                    "wd_label": "",
+                    "wd_description": ""
+                }
+            ],
+            "optional": false,
+            "modality": [],
+            "importance": [],
+            "likelihood": []
+        },
+        {
+            "@id": "",
+            "name": "",
+            "description": "",
+            "wd_node": [],
+            "wd_label": "",
+            "wd_description": "",
+            "isSchema": false,
+            "repeatable": false,
+            "outlinks": [],
+            "participants": [],
+            "entities": [],
+            "relations": [],
+            "optional": false,
+            "modality": [],
+            "importance": [],
+            "likelihood": []
+        },
+        {
+            "@id": "",
+            "name": "",
+            "description": "",
+            "wd_node": [],
+            "wd_label": "",
+            "wd_description": "",
+            "isSchema": false,
+            "repeatable": false,
+            "outlinks": [],
+            "participants": [],
+            "entities": [],
+            "relations": [],
+            "optional": false,
+            "modality": [],
+            "importance": [],
+            "likelihood": []
+        }
+    ]
+}

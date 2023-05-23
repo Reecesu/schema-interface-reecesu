@@ -1,0 +1,10 @@
+.App {
+    font-family: sans-serif;
+    text-align: left;
+    }
+  
+.my-editor {
+    width: 700px;
+    /* height: 400px; */
+    display: flex;
+  }

@@ -247,8 +247,6 @@ def get_nodes_and_edges(schema_json):
                 entity_id = participant['entity']
                 if entity_id == '':
                     entity_id = "Entities/20000/"
-                elif not entity_id.startswith("Entities/"):
-                    entity_id = "Entities/" + entity_id
                 edge = create_edge(event_id, entity_id, _label, _edge_type='step_participant')
                 edge['data']['@id'] = participant['@id']
                 edges.append(edge)

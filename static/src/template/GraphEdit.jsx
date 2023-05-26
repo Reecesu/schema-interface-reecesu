@@ -189,7 +189,7 @@ const GraphEdit = React.forwardRef((props, ref) => {
       // Add outlink to selected element
     } else {
       // Update element fields
-      props.sideEditorCallback(node_data);
+      // props.sideEditorCallback(node_data);
   
       // Update the events list in the schema JSON with the new chapter event
       if (node_data.updatedFields.name) {
@@ -197,7 +197,7 @@ const GraphEdit = React.forwardRef((props, ref) => {
         axios.post("/add_event", data.selectedElement)
           .then(res => {
             console.log("Response from server: ", res.data);
-            props.callbackFunction(res.data);
+            props.callbackFunction(res.data); // or props.updateCallback(res.data);
           })
           .catch(err => {
             console.error(err);

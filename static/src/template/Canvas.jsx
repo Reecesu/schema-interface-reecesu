@@ -29,8 +29,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@material-ui/icons/Close';
 import Button from '@material-ui/core/Button';
 import IconButton from '@mui/material/IconButton';
+import EditIcon from '@mui/icons-material/Edit';
 import Typography from '@mui/material/Typography';
-import FileCopyIcon from '@mui/icons-material/FileCopy'
 
 import 'cytoscape-context-menus/cytoscape-context-menus.css';
 import "cytoscape-navigator/cytoscape.js-navigator.css";
@@ -43,7 +43,6 @@ cytoscape.use(cytoscapeNavigator);
 let event_counter = 20000;
 let entity_counter = 10000;
 let relation_counter = 30000;
-let participant_counter = 20000;
 
 class Canvas extends React.Component {
 constructor(props) {
@@ -62,6 +61,7 @@ constructor(props) {
         dialogContent: null,
         event_counter: 20000,
         entity_counter: 10000,
+        participant_counter: 20000,
         isAddEntityDialogOpen: false,
         isAddParticipantDialogOpen: false,
         addRelationDialogOpen: false,
@@ -127,12 +127,18 @@ handleCloseAddParticipantDialog = () => {
 
 handleAddParticipant = ({ participantName, participantRoleName, selectedEntity }) => {
   if (participantName) {
+    const newCounter = this.state.participant_counter + 1;
+
     const participant = {
       ...templates.participant,
-      '@id': `Participants/${this.state.participant_counter++}/${participantName}`,
+      '@id': `Participants/${newCounter}/${participantName}`,
       'roleName': participantRoleName,
       'entity': selectedEntity
     };
+
+    this.setState(prevState => ({
+      participant_counter: prevState.participant_counter + 1
+    }));
 
     axios.post("/add_participant", {
       event_id: this.state.selectedElementForAddParticipant['@id'],
@@ -845,6 +851,13 @@ render() {
                         color="action"
                         fontSize='large'
                         onClick={this.reloadCanvas}
+                    />
+                </Tooltip>
+                <Tooltip title="View JSON Tree">
+                    <EditIcon
+                        type="button"
+                        color="action"
+                        fontSize="large"
                     />
                 </Tooltip>
                 <Tooltip title="Toggle Navigator">

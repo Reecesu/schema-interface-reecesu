@@ -17,7 +17,7 @@ const MuiDrawer = (props) => {
 
   const Container = styled(Box)({
     width: "max-content",
-    backgroundColor: theme.palette.background.default,
+    // Removed backgroundColor
     display: "flex",
     flexDirection: "column",
     textAlign: "left",
@@ -25,7 +25,17 @@ const MuiDrawer = (props) => {
   });
 
   return (
-    <Drawer open={open} onClose={props.handleToggle} anchor="right">
+    <Drawer 
+      open={open} 
+      onClose={props.handleToggle} 
+      anchor="right" 
+      // PaperProps={{ 
+      //   style: { 
+      //     backgroundColor: 'rgba(0, 0, 0, 0)', 
+      //     boxShadow: 'none'
+      //   }, 
+      // }}
+    >
       <Container p={2}>
         <Typography variant="h6">
           JSON Editor

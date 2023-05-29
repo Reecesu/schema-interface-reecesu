@@ -291,7 +291,7 @@ def get_nodes_and_edges(schema_json):
     # find root node(s)
     parentless_edge = {}
     for edge in edges:
-        if 'source' in edge['data'] and edge['data']['source'] in nodes:
+        if edge['data']['source'] not in parentless_edge:
             if nodes[edge['data']['source']]['data']['_type'] == 'entity':
                 parentless_edge[edge['data']['source']] = False
             else:
@@ -305,8 +305,6 @@ def get_nodes_and_edges(schema_json):
     # Zoey wants an entity-first view, so all entities are shown, with groups of events around them in clusters
         # Q: are we able to make a tab on the viewer itself to switch between views?
         
-    # print("\nnodes from get_nodes_and_edges:", nodes)
-    # print("\nedges from get_nodes_and_edges:", edges)
     return nodes, edges
 
 # NOTE: These are new??

@@ -29,7 +29,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@material-ui/icons/Close';
 import Button from '@material-ui/core/Button';
 import IconButton from '@mui/material/IconButton';
-import EditIcon from '@mui/icons-material/Edit';
+// import EditIcon from '@mui/icons-material/Edit';
 import Typography from '@mui/material/Typography';
 
 import 'cytoscape-context-menus/cytoscape-context-menus.css';
@@ -853,13 +853,13 @@ render() {
                         onClick={this.reloadCanvas}
                     />
                 </Tooltip>
-                <Tooltip title="View JSON Tree">
+                {/* <Tooltip title="View JSON Tree">
                     <EditIcon
                         type="button"
                         color="action"
                         fontSize="large"
                     />
-                </Tooltip>
+                </Tooltip> */}
                 <Tooltip title="Toggle Navigator">
                     <MapIcon
                         type="button"

@@ -23,35 +23,6 @@ schema_key_dict = {
     'relation': ['name', 'wd_node', 'wd_label', 'modality', 'wd_description', 'ta1ref', 'relationSubject', 'relationObject', 'relationPredicate']
 }
 
-# # def transform_version()
-
-# def is_ta2_format(data):
-#     return '@context' in data and 'instances' in data
-
-# def convert_ta2_to_ta1_format(ta2):
-#     ta1 = {
-#         'events': [],
-#         'entities': [],
-#         'relations': [],
-#     }
-
-#     if ta2['instances'] and len(ta2['instances']) > 0:
-#         instance = ta2['instances'][0]
-
-#         for event in instance['events']:
-#             new_event = event.copy()
-#             if 'entities' in event:
-#                 for entity in event['entities']:
-#                     ta1['entities'].append(entity)
-#                 del new_event['entities']
-#             if 'relations' in event:
-#                 for relation in event['relations']:
-#                     ta1['relations'].append(relation)
-#                 del new_event['relations']
-#             ta1['events'].append(new_event)
-
-#     return ta1
-
 def create_node(_id, _label, _type, _shape=''):
     """Creates a node.
 
@@ -334,8 +305,6 @@ def get_nodes_and_edges(schema_json):
     # Zoey wants an entity-first view, so all entities are shown, with groups of events around them in clusters
         # Q: are we able to make a tab on the viewer itself to switch between views?
         
-    # print("\nnodes from get_nodes_and_edges:", nodes)
-    # print("\nedges from get_nodes_and_edges:", edges)
     return nodes, edges
 
 # NOTE: These are new??
@@ -482,6 +451,7 @@ def append_node():
     """
     global schema_json
     new_event = request.get_json()
+    print('Received data:', new_event)
     selected_element = new_event['parent_id'] #request.args.get('selected_element')
     del new_event['parent_id']
 
@@ -541,17 +511,16 @@ def add_entity_to_event():
     event_id = data.get('event_id')
     entity_data = data.get('entity_data')
 
-    # Remove the 'event' and 'entity' values from entity_data
-    del entity_data['event']
-    print('entity_data', entity_data)
-
     # Find the event with the given ID and add the entity to its entities list
     for event in schema_json['events']:
         if event['@id'] == event_id:
+            # Ensure the 'entities' key exists in the event dictionary
+            if 'entities' not in event:
+                event['entities'] = []
             event['entities'].append(entity_data)
     
     # Print the updated schema for confirmation
-    print(json.dumps(schema_json, indent=2))
+    # print(json.dumps(schema_json, indent=2))
     
     # Return a success response
     return schema_json
@@ -568,7 +537,7 @@ def add_participant_to_event():
             event['participants'].append(participant_data)
     
     # Print the updated schema for confirmation
-    print(json.dumps(schema_json, indent=2))
+    # print(json.dumps(schema_json, indent=2))
     
     # Return a success response
     return schema_json
@@ -691,6 +660,38 @@ def upload():
         'parsedSchema': parsed_schema,
         'name': schema_name,
         'schemaJson': schema_json
+    })
+
+@app.route('/delete_entity', methods=['DELETE'])
+def delete_entity():
+    entity_id = request.json.get('entity_id')
+
+    # Remove the entity from the schema_json['events']['entities']
+    for event in schema_json['events']:
+        if 'entities' in event:
+            event['entities'] = [entity for entity in event['entities'] if entity.get('@id') != entity_id]
+
+    # Remove the entity from the participants' 'entity' field
+    for event in schema_json['events']:
+        if 'participants' in event:
+            event['participants'] = [
+                participant for participant in event['participants'] if participant.get('entity') != entity_id
+            ]
+            
+    # Remove relations with matching relationSubject or relationObject
+    for event in schema_json['events']:
+        if 'relations' in event:
+            event['relations'] = [
+                relation for relation in event['relations']
+                if relation.get('relationSubject') != entity_id and relation.get('relationObject') != entity_id
+            ]
+    
+    # Reload the schema to update the nodes and edges
+    nodes, edges = get_nodes_and_edges(schema_json)
+    
+    return jsonify({
+        'nodes': nodes,
+        'edges': edges
     })
 
 # TODO: get_subtree_or_update_node not accessed

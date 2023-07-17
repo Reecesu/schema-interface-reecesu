@@ -1,5 +1,6 @@
 import React from 'react';
 import axios from 'axios';
+import { ToastContainer, toast } from 'react-toastify';
 
 import templates from './templates';
 import GraphEdit from './GraphEdit';
@@ -28,8 +29,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@material-ui/icons/Close';
 import Button from '@material-ui/core/Button';
 import IconButton from '@mui/material/IconButton';
+import EditIcon from '@mui/icons-material/Edit';
 import Typography from '@mui/material/Typography';
-import FileCopyIcon from '@mui/icons-material/FileCopy'
 
 import 'cytoscape-context-menus/cytoscape-context-menus.css';
 import "cytoscape-navigator/cytoscape.js-navigator.css";
@@ -42,7 +43,6 @@ cytoscape.use(cytoscapeNavigator);
 let event_counter = 20000;
 let entity_counter = 10000;
 let relation_counter = 30000;
-let participant_counter = 20000;
 
 class Canvas extends React.Component {
 constructor(props) {
@@ -61,6 +61,7 @@ constructor(props) {
         dialogContent: null,
         event_counter: 20000,
         entity_counter: 10000,
+        participant_counter: 20000,
         isAddEntityDialogOpen: false,
         isAddParticipantDialogOpen: false,
         addRelationDialogOpen: false,
@@ -81,6 +82,7 @@ constructor(props) {
     };
     this.state.topTree = treeData;
 
+    this.showSidebar = this.showSidebar.bind(this);
     this.showSubTree = this.showSubTree.bind(this);
     this.removeSubTree = this.removeSubTree.bind(this);
     this.runLayout = this.runLayout.bind(this);
@@ -125,12 +127,18 @@ handleCloseAddParticipantDialog = () => {
 
 handleAddParticipant = ({ participantName, participantRoleName, selectedEntity }) => {
   if (participantName) {
+    const newCounter = this.state.participant_counter + 1;
+
     const participant = {
       ...templates.participant,
-      '@id': `Participants/${participant_counter++}/${participantName}`,
+      '@id': `Participants/${newCounter}/${participantName}`,
       'roleName': participantRoleName,
       'entity': selectedEntity
     };
+
+    this.setState(prevState => ({
+      participant_counter: prevState.participant_counter + 1
+    }));
 
     axios.post("/add_participant", {
       event_id: this.state.selectedElementForAddParticipant['@id'],
@@ -138,10 +146,27 @@ handleAddParticipant = ({ participantName, participantRoleName, selectedEntity }
     })
     .then(res => {
       console.log("Response from server: ", res.data);
-      this.props.updateCallback(res.data);
+
+      // Increment participant_counter in the .then callback
+      this.setState({ participant_counter: this.state.participant_counter + 1 });
+
+      const newSchema = res.data;
+      this.setState({
+        canvasElements: CytoscapeComponent.normalizeElements(newSchema.events)
+      }, () => this.reloadCanvas());  // refresh the graph right after updating the state
+
+      if (this.props.callbackFunction) {
+        this.props.callbackFunction(res.data);
+      }
+
+      // Display success toast
+      toast.success('Participant added successfully!');
     })
     .catch(err => {
       console.error(err);
+
+      // Display error toast
+      toast.error('Failed to add participant.');
     });
 
     this.handleCloseAddParticipantDialog();
@@ -168,10 +193,22 @@ onSubmitEvent = (newEvent) => {
   })
   .then(res => {
       console.log("Response from server: ", res.data);
-      this.props.updateCallback(res.data);
+      
+      // Update the state with the new schema
+      const newSchema = res.data;
+      this.setState({
+        canvasElements: CytoscapeComponent.normalizeElements(newSchema.events)
+      }, () => this.reloadCanvas());  // refresh the graph right after updating the state
+
+      if (this.props.callbackFunction) {
+        this.props.callbackFunction(res.data);
+      }
+
+      toast.success('Event added successfully!'); // Display success toast
   })
   .catch(err => {
       console.error(err);
+      toast.error('Failed to add event.'); // Display error toast
   });
 };
 
@@ -208,8 +245,8 @@ handleAddRelation = ({ relationName, wdNode, wdLabel, wdDescription, selectedEnt
     })
     .then(res => {
       console.log("Response from server: ", res.data);
-      if (this.props.updateCallback) {
-        this.props.updateCallback(res.data);
+      if (this.props.callbackFunction) {
+        this.props.callbackFunction(res.data);
       }
     })
     .catch(err => {
@@ -246,12 +283,26 @@ handleAddEntity = (newEntity) => {
     console.log("Response from server: ", res.data);
     // increment entity_counter in the .then callback
     this.setState({ entity_counter: this.state.entity_counter + 1 });
-    if (this.props.updateCallback) {
-      this.props.updateCallback(res.data);
+
+    // Update the state with the new schema
+    // This assumes that `canvasElements` represents the current schema
+    const newSchema = res.data;
+    this.setState({
+      canvasElements: CytoscapeComponent.normalizeElements(newSchema.events)
+    }, () => this.reloadCanvas());  // refresh the graph right after updating the state
+
+    if (this.props.callbackFunction) {
+      this.props.callbackFunction(res.data);
     }
+
+    // Display success toast
+    toast.success('Entity added successfully!');
   })
   .catch(err => {
     console.error(err);
+
+    // Display error toast
+    toast.error('Failed to add entity.');
   });
 };
 
@@ -287,6 +338,10 @@ handleDeleteEntity = (entityId) => {
       });
   }
 };
+
+showSidebar(data) {
+    this.props.sidebarCallback(data);
+}
 
 saveGraphState() {
     this.graphHistory.push(this.cy.json());
@@ -798,6 +853,13 @@ render() {
                         onClick={this.reloadCanvas}
                     />
                 </Tooltip>
+                <Tooltip title="View JSON Tree">
+                    <EditIcon
+                        type="button"
+                        color="action"
+                        fontSize="large"
+                    />
+                </Tooltip>
                 <Tooltip title="Toggle Navigator">
                     <MapIcon
                         type="button"
@@ -835,6 +897,7 @@ render() {
                 isOpen={this.state.isGraphEditOpen}
                 handleOpen={this.handleOpen}
                 handleSubmit={this.handleSubmit}
+                sideEditorCallback={this.props.sideEditorCallback}
                 addChapterEvent={this.props.addChapterEvent}
                 />
             <AddParticipantDialog
@@ -866,7 +929,7 @@ render() {
                 open={this.state.isAddXORDialogOpen}
                 handleClose={this.handleCloseAddXORDialog}
                 selectedElement={this.state.selectedElementForAddXOR}
-                updateCallback={this.props.updateCallback}
+                callbackFunction={this.props.callbackFunction}
                 />
             </div>
         );

@@ -15,7 +15,8 @@ import {
   Typography,
   Paper,
   Box,
-  makeStyles
+  makeStyles,
+  Slider
 } from "@material-ui/core";
 import _ from "lodash";
 import Draggable from 'react-draggable';
@@ -30,21 +31,22 @@ function PaperComponent(props) {
 
 const useStyles = makeStyles((theme) => ({
   halfWidthDialog: {
-    width: '50%', // Change the width of the dialog to 50%
+    width: '50%',
   },
   dialogTitle: {
     fontSize: '3rem',
-    color: blue[900], // Change color to darker blue
+    color: blue[900],
   },
   header: {
-    fontSize: '1rem', // normal size
-    fontWeight: 'bold', // make the font bold
-    color: blue[900], // Change color to darker blue
+    fontSize: '1rem',
+    fontWeight: 'bold',
+    color: blue[900],
+    marginTop: theme.spacing(1),
   },
   multilineInput: {
-    minHeight: '3em', // Set the minimum height to accommodate 3 lines
-    maxHeight: '6em', // Set the maximum height to accommodate 3 lines
-    overflow: 'hidden', // Clip text to the last line
+    minHeight: '3em',
+    maxHeight: '6em',
+    overflow: 'hidden',
   },
 }));
 
@@ -60,7 +62,20 @@ const GraphEdit = React.forwardRef((props, ref) => {
   const [data, setData] = useState(initData);
   const [edit, setEdit] = useState("");
   const [open, setOpen] = useState(!!props.selectedElement);
-  const refFocus = useRef(null);
+  // const refFocus = useRef(null);
+
+  const handleSliderChange = (e, value) => {
+    setData(prevData => {
+      const newSelectedElement = {
+        ...prevData.selectedElement,
+        'importance': [Math.round(value * 100)],
+      };
+      return {
+        ...prevData,
+        selectedElement: newSelectedElement,
+      };
+    });
+  };
 
   // Add a useEffect hook to fetch entity names from the server
   useEffect(() => {
@@ -118,19 +133,19 @@ const GraphEdit = React.forwardRef((props, ref) => {
     });
   };
 
-  const handleSwitchChange = (e) => {	
-    // update data state with the new value	
-    setData(prevData => {	
-      const newSelectedElement = {	
-        ...prevData.selectedElement,	
-        [e.target.name]: e.target.checked,	
-      };	
-      return {	
-        ...prevData,	
-        selectedElement: newSelectedElement,	
-      };	
-    });	
-  };	
+  // const handleSwitchChange = (e) => {	
+  //   // update data state with the new value	
+  //   setData(prevData => {	
+  //     const newSelectedElement = {	
+  //       ...prevData.selectedElement,	
+  //       [e.target.name]: e.target.checked,	
+  //     };	
+  //     return {	
+  //       ...prevData,	
+  //       selectedElement: newSelectedElement,	
+  //     };	
+  //   });	
+  // };	
 
   const handleBooleanChange = (e) => {
     const targetName = e.target.name;
@@ -148,20 +163,23 @@ const GraphEdit = React.forwardRef((props, ref) => {
     });
   };
 
-  const addChapterEventIdToChildren = (newEventId, selectedElementId) => {	
-    schema_json['events'].forEach(element => {	
-      if (element['@id'] === selectedElementId) {	
-        if (!element.children) {	
-          element.children = [newEventId];	
-        } else {	
-          element.children.push(newEventId);	
-        }	
-      }	
-    });	
-  };
+  // const addChapterEventIdToChildren = (newEventId, selectedElementId) => {	
+  //   schema_json['events'].forEach(element => {	
+  //     if (element['@id'] === selectedElementId) {	
+  //       if (!element.children) {	
+  //         element.children = [newEventId];	
+  //       } else {	
+  //         element.children.push(newEventId);	
+  //       }	
+  //     }	
+  //   });	
+  // };
 
   const handleSubmit = (e) => {
     // create data to pass up
+    if (data.selectedElement['importance']) {
+      data.selectedElement['importance'] = [Math.round(data.selectedElement['importance'][0] * 100)];
+    }
     const node_data = {
       id: data.selectedElement['id'],
       updatedFields: {},
@@ -175,13 +193,13 @@ const GraphEdit = React.forwardRef((props, ref) => {
       }
     });
   
-    // console.log("\n(GRAPHEDIT.JSX) The node data from handleSubmit:\n", node_data);
+    console.log("(GRAPHEDIT.JSX) The node data from handleSubmit:\n", node_data);
   
     // change sidebar internal id if the id is changed
     if (e.target.id === '@id') {
       data.selectedElement['id'] = e.target.value;
       setData({ ...data });
-      // console.log("(GRAPHEDIT.JSX) Selected element id updated to:", data.selectedElement['id']);
+      console.log("(GRAPHEDIT.JSX) Selected element id updated to:", data.selectedElement['id']);
     }
   
     // Determine which action to take based on the props
@@ -189,15 +207,15 @@ const GraphEdit = React.forwardRef((props, ref) => {
       // Add outlink to selected element
     } else {
       // Update element fields
-      // props.sideEditorCallback(node_data);
+      props.sideEditorCallback(node_data);
   
       // Update the events list in the schema JSON with the new chapter event
       if (node_data.updatedFields.name) {
-        // console.log("(GRAPHEDIT.JSX) Sending chapter event to server:", data.selectedElement);
+        console.log("(GRAPHEDIT.JSX) Sending chapter event to server:", data.selectedElement);
         axios.post("/add_event", data.selectedElement)
           .then(res => {
             console.log("Response from server: ", res.data);
-            props.updateCallback(res.data);
+            props.callbackFunction(res.data); // or props.updateCallback(res.data);
           })
           .catch(err => {
             console.error(err);
@@ -208,6 +226,7 @@ const GraphEdit = React.forwardRef((props, ref) => {
     handleClose();
   };
   
+  
   const handleClose = () => {
     // close the dialog
     // console.log("Closing dialog");
@@ -217,12 +236,13 @@ const GraphEdit = React.forwardRef((props, ref) => {
 
   let i = 0;
   const excluded_ids = ['id', '_label', '_type', '_shape', '_edge_type', 'child','outlinks', 'relations', 'children_gate', 'key', 'modality']
-  const selectedElement = data.selectedElement || {};
+  // const selectedElement = data.selectedElement || {};
 
   return (
     <Dialog open={open} onClose={handleClose} ref={ref} maxWidth={false} classes={{ paper: classes.halfWidthDialog }} PaperComponent={PaperComponent}>
       <DialogTitle id="draggable-dialog-title" className={classes.dialogTitle}>{isEmpty(data) ? "" : data.selectedElement?.["_label"]}</DialogTitle>
       <DialogContent>
+      {/* <Box mt={2} /> */}
           {isEmpty(data) ? (
           ""
           ) : (
@@ -233,6 +253,25 @@ const GraphEdit = React.forwardRef((props, ref) => {
           <form noValidate autoComplete="off">
             <Box display="flex" flexDirection="column" justifyContent="space-between" minHeight="200px">
               {data.selectedElement && Object.entries(data.selectedElement).map(([key, val]) => {
+                // Add a slider for the 'importance' field
+                if (key === 'importance') {
+                  return (
+                    <Box key={key}>
+                      <Typography id="importance-slider" gutterBottom className={classes.header}>
+                        Importance
+                      </Typography>
+                      <Slider
+                        value={(val && !isNaN(val[0])) ? val[0] / 100 : 0}
+                        onChange={handleSliderChange}
+                        step={0.05}
+                        min={0}
+                        max={1}
+                        valueLabelDisplay="auto"
+                        aria-labelledby="importance-slider"
+                      />
+                    </Box>
+                  );
+                }
                 if (excluded_ids.includes(key) || ['participants', 'children', 'entities'].includes(key)) return null;
                 return (
                   <Box flexGrow={1} key={key}>
@@ -274,7 +313,7 @@ const GraphEdit = React.forwardRef((props, ref) => {
                 if (val && val.length > 0) {
                   return (
                     <Box key={key}>
-                      <Typography variant="h10" className={classes.header}>{_.capitalize(key)}</Typography>
+                      <Typography className={classes.header}>{_.capitalize(key)}</Typography>
                       <Typography>{val.map(v => (v["@id"] || v["name"]) ? (v["name"] || data.entityNames[v["@id"]] || data.eventNames[v["@id"]] || v["@id"]) : v).join(", ")}</Typography>
                     </Box>
                   );
@@ -292,4 +331,5 @@ const GraphEdit = React.forwardRef((props, ref) => {
     </Dialog>
   );
 });
+
 export default GraphEdit;

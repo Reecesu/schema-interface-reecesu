@@ -9,8 +9,6 @@ import axios from 'axios';
 import UploadModal from './UploadModal';
 import MuiDrawer from './MuiDrawer';
 import Canvas from './Canvas';
-import SideEditor from './SideEditor';
-import JsonEdit from './JsonEdit';
 
 /* Viewer page for the schema interface. */
 class Viewer extends Component {

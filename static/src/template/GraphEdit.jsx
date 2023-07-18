@@ -68,7 +68,7 @@ const GraphEdit = React.forwardRef((props, ref) => {
     setData(prevData => {
       const newSelectedElement = {
         ...prevData.selectedElement,
-        'importance': [Math.round(value * 100)],
+        'importance': [value],
       };
       return {
         ...prevData,
@@ -177,9 +177,6 @@ const GraphEdit = React.forwardRef((props, ref) => {
 
   const handleSubmit = (e) => {
     // create data to pass up
-    if (data.selectedElement['importance']) {
-      data.selectedElement['importance'] = [Math.round(data.selectedElement['importance'][0] * 100)];
-    }
     const node_data = {
       id: data.selectedElement['id'],
       updatedFields: {},
@@ -261,7 +258,7 @@ const GraphEdit = React.forwardRef((props, ref) => {
                         Importance
                       </Typography>
                       <Slider
-                        value={(val && !isNaN(val[0])) ? val[0] / 100 : 0}
+                        value={(val && !isNaN(val[0])) ? val[0] : 1}
                         onChange={handleSliderChange}
                         step={0.05}
                         min={0}

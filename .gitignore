@@ -3,5 +3,5 @@ __pycache__
 node_modules
 venv
 env
-# dist
+dist
 temp.txt

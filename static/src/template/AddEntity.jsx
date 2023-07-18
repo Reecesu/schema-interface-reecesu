@@ -38,6 +38,7 @@ function AddEntityDialog({ open, onClose, onSubmit, selectedElementForAddEntity,
     setEntityWdNode('');
     setEntityWdLabel('');
     setEntityWdDescription('');
+    onClose(); // Added onClose here
   };
 
   return (

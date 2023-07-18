@@ -35,37 +35,38 @@ function AddEventDialog({ open, onClose, onSubmit }) {
     onSubmit(newEvent);
     setEventName('');
     setIsChapterEvent(false);
+    onClose(); // Added onClose here
   };
 
   return (
     <Dialog open={open} onClose={onClose} PaperComponent={PaperComponent}>
-    <DialogTitle id="draggable-dialog-title">Add Event</DialogTitle>
-        <DialogContent>
-            <DialogContentText>
-            Please enter event name.
-            </DialogContentText>
-            <TextField
-            autoFocus
-            margin="dense"
-            label="Event Name"
-            type="text"
-            fullWidth
-            value={eventName}
-            onChange={(e) => setEventName(e.target.value)}
-            />
-            <FormControlLabel
-            control={<Switch checked={isChapterEvent} onChange={(e) => setIsChapterEvent(e.target.checked)} />}
-            label="Event Type"
-            />
-        </DialogContent>
-        <DialogActions>
-            <Button onClick={onClose}>
-            Cancel
-            </Button>
-            <Button onClick={handleSubmit}>
-            Add {isChapterEvent ? 'Chapter Event' : 'Primitive Event'}
-            </Button>
-        </DialogActions>
+      <DialogTitle id="draggable-dialog-title">Add Event</DialogTitle>
+      <DialogContent>
+        <DialogContentText>
+          Please enter event name.
+        </DialogContentText>
+        <TextField
+          autoFocus
+          margin="dense"
+          label="Event Name"
+          type="text"
+          fullWidth
+          value={eventName}
+          onChange={(e) => setEventName(e.target.value)}
+        />
+        <FormControlLabel
+          control={<Switch checked={isChapterEvent} onChange={(e) => setIsChapterEvent(e.target.checked)} />}
+          label="Event Type"
+        />
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>
+          Cancel
+        </Button>
+        <Button onClick={handleSubmit}>
+          Add {isChapterEvent ? 'Chapter Event' : 'Primitive Event'}
+        </Button>
+      </DialogActions>
     </Dialog>
   );
 }

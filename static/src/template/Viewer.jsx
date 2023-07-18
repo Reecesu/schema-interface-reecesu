@@ -122,7 +122,7 @@ class Viewer extends Component {
     render() {
         let canvas = "";
         let schemaHeading = "";
-        let jsonEdit = "";
+        let muiDrawer = "";
         let sidebarClassName = this.state.isOpen ? "sidebar-open" : "sidebar-closed";
         let canvasClassName = this.state.isOpen ? "canvas-shrunk" : "canvas-wide";
     
@@ -141,11 +141,12 @@ class Viewer extends Component {
                 className={canvasClassName}
             />;
     
-            jsonEdit = <JsonEdit
-                    style={{ width: 'inherit', height: '75vh' }}
-                    schemaJson={this.state.schemaJson}
-                    parentCallback={this.jsonEditorCallback}
-                />
+            muiDrawer = <MuiDrawer
+                open={this.props.drawerOpen}
+                handleToggle={this.props.handleToggle}
+                schemaJson={this.state.schemaJson}
+                parentCallback={this.jsonEditorCallback} 
+            />;
         }
     
         return (
@@ -165,14 +166,8 @@ class Viewer extends Component {
                 <div className="row">{schemaHeading}</div>
                 <div style={{ display: 'inline-flex' }}>
                     {/* {console.log("Testing from Viewer.jsx", this.state.schemaJson)} */}
-                    <MuiDrawer open={this.state.isOpen} handleToggle={this.handleDrawerToggle} setShowJsonEdit={this.setShowJsonEdit} schemaJson={this.state.schemaJson} />
-                    <SideEditor
-                        data={this.state.nodeData}
-                        isOpen={this.state.isOpen}
-                        sideEditorCallback={this.sideEditorCallback}
-                        className={sidebarClassName} />
+                    {muiDrawer}
                     {canvas}
-                    {jsonEdit}
                 </div>
             </div>
         )

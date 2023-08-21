@@ -6,6 +6,7 @@ PATH=$APP_DIR/venv/bin:$PATH
 echo "Creating bundle.js"
 
 cd "$APP_DIR"/static
+npm install
 npm run build
 cd "$APP_DIR"
 

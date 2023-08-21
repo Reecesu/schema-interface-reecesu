@@ -229,6 +229,7 @@ const GraphEdit = React.forwardRef((props, ref) => {
     // console.log("Closing dialog");
     // console.log("Type of onClose: ", typeof props.onClose);
     setOpen(false);
+    props.resetSelectedElement();
   };
 
   let i = 0;

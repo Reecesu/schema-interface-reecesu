@@ -97,6 +97,10 @@ constructor(props) {
     // console.log('canvasElements:', this.state.canvasElements);
 }
 
+resetSelectedElement = () => {
+  this.setState({ selectedElement: null });
+};
+
 handleNavigatorToggle = () => {
   this.setState((prevState) => ({
       isNavigatorVisible: !prevState.isNavigatorVisible
@@ -899,6 +903,7 @@ render() {
                 handleSubmit={this.handleSubmit}
                 sideEditorCallback={this.props.sideEditorCallback}
                 addChapterEvent={this.props.addChapterEvent}
+                resetSelectedElement={this.resetSelectedElement}
                 />
             <AddParticipantDialog
                 open={this.state.isAddParticipantDialogOpen}

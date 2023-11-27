@@ -230,6 +230,7 @@ const GraphEdit = React.forwardRef((props, ref) => {
     // console.log("Type of onClose: ", typeof props.onClose);
     setOpen(false);
     props.resetSelectedElement();
+    props.updateGraph();
   };
 
   let i = 0;

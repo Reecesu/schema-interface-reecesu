@@ -87,6 +87,7 @@ constructor(props) {
     this.removeSubTree = this.removeSubTree.bind(this);
     this.runLayout = this.runLayout.bind(this);
     this.reloadCanvas = this.reloadCanvas.bind(this);
+    this.updateGraph = this.updateGraph.bind(this);
     this.removeObject = this.removeObject.bind(this);
     this.restore = this.restore.bind(this);
     this.fitCanvas = this.fitCanvas.bind(this);
@@ -419,14 +420,37 @@ runLayout() {
 }
 
 reloadCanvas() {
-    this.setState({
-        canvasElements: CytoscapeComponent.normalizeElements(this.props.elements),
-        hasSubtree: false,
-        showParticipants: true
-    });
-    this.cy.elements().remove();
-    this.cy.add(this.state.canvasElements);
-    this.runLayout();
+  this.setState({
+      canvasElements: CytoscapeComponent.normalizeElements(this.props.elements),
+      hasSubtree: false,
+      showParticipants: true
+  });
+  this.cy.elements().remove();
+  this.cy.add(this.state.canvasElements);
+  this.runLayout();
+}
+
+updateGraph() {
+  // Store current positions
+  let nodePositions = {};
+  this.cy.nodes().forEach(node => {
+      nodePositions[node.id()] = node.position();
+  });
+
+  this.setState({
+      canvasElements: CytoscapeComponent.normalizeElements(this.props.elements)
+  });
+
+  this.cy.elements().remove();
+  this.cy.add(this.state.canvasElements);
+
+  // Set the positions back to their original values
+  for (let nodeId in nodePositions) {
+      const node = this.cy.getElementById(nodeId);
+      if (node) {
+          node.position(nodePositions[nodeId]);
+      }
+  }
 }
 
 removeObject(event) {
@@ -456,6 +480,8 @@ handleOpen() {
 
 handleClose = () => {
     this.setState({ isGraphEditOpen: false });
+    selectedElement: null
+    this.reloadCanvas
 }
 
 fitCanvas() {
@@ -904,6 +930,7 @@ render() {
                 sideEditorCallback={this.props.sideEditorCallback}
                 addChapterEvent={this.props.addChapterEvent}
                 resetSelectedElement={this.resetSelectedElement}
+                updateGraph={this.updateGraph}
                 />
             <AddParticipantDialog
                 open={this.state.isAddParticipantDialogOpen}
@@ -916,6 +943,7 @@ render() {
                 onClose={this.handleCloseAddEventDialog}
                 onSubmit={this.onSubmitEvent}
                 selectedElement={this.state.selectedElementForAddEvent}
+                reloadCanvas={this.reloadCanvas}
                 />
             <AddRelationDialog 
                 open={this.state.addRelationDialogOpen} 

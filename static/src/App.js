@@ -79,7 +79,7 @@ export default function App() {
               sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }}
             >
               <Button component={Link} to="/" color="inherit">
-                Schema Curation Interface
+                Classroom Adjudication Tool
               </Button>
             </Typography>
             <Typography
@@ -104,20 +104,6 @@ export default function App() {
                 href="https://github.com/cu-clear/schema-interface"
               >
                 <GitHubIcon />
-              </a>
-            </IconButton>
-            <IconButton
-              size="large"
-              edge="start"
-              color="inherit"
-              sx={{ mr: 2 }}
-            >
-              <a
-                target="_blank"
-                rel="noopener"
-                href="https://chrysographes.notion.site/Schema-Curation-Manual-018034f383a24f75a4c10fc378678d75"
-              >
-                <HelpIcon />
               </a>
             </IconButton>
           </Toolbar>
